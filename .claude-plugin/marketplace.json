@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "framework-dev",
-      "source": ".",
+      "source": "./",
       "description": "Project architecture orchestrator that helps finalize frameworks for new projects through structured discussion, research-backed recommendations, and multi-agent coordination.",
       "version": "1.0.0",
       "author": {
