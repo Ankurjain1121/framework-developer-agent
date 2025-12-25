@@ -1,130 +1,116 @@
-# Framework Developer Orchestrator
+# Framework Developer Plugin
 
-A Claude Code agent that helps you plan and finalize software project frameworks through structured discussion, research-backed recommendations, and multi-agent coordination.
+A Claude Code plugin that provides a **Framework Developer Orchestrator** - an AI agent that helps plan and architect software projects through structured discussion.
 
 ## Features
 
-- **6-Phase Structured Workflow** - From discovery to integration
-- **Research-First Approach** - Every recommendation backed by sources
-- **Multi-Agent Orchestration** - Coordinate multiple LLMs for complex projects
-- **Mermaid Diagrams** - Auto-generated architecture visualizations
-- **State Persistence** - Save and resume project planning sessions
+- **6-Phase Workflow**: Discovery → Structure → Planning → Agent Assignment → Execution → Integration
+- **Research-Backed**: Every recommendation includes source URLs
+- **Multi-Agent Coordination**: Assign tasks across different LLMs (Claude, GPT-4, Gemini, etc.)
+- **Visual Architecture**: Generates Mermaid diagrams for module relationships and data flow
+- **State Management**: Save and resume project planning sessions
 
 ## Installation
 
-### Option 1: Copy to your Claude Code agents folder
+### Option 1: Via GitHub (Recommended)
 
-```bash
-# Clone this repository
-git clone https://github.com/Ankurjain1121/framework-developer-agent.git
+Add to your `~/.claude/settings.json`:
 
-# Copy the agent definition to your Claude Code agents folder
-cp framework-developer-agent/.claude/agents/framework-developer.md ~/.claude/agents/
+```json
+{
+  "extraKnownMarketplaces": {
+    "framework-dev": {
+      "source": {
+        "source": "github",
+        "repo": "Ankurjain1121/framework-developer-agent"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "framework-dev@framework-dev": true
+  }
+}
 ```
 
-### Option 2: Manual installation
+### Option 2: Local Clone
 
-1. Create the agents directory if it doesn't exist:
-   ```bash
-   mkdir -p ~/.claude/agents
-   ```
+```bash
+git clone https://github.com/Ankurjain1121/framework-developer-agent.git ~/.claude/plugins/framework-dev
+```
 
-2. Copy the contents of `.claude/agents/framework-developer.md` to `~/.claude/agents/framework-developer.md`
+Then add to `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "framework-dev-local": {
+      "source": {
+        "source": "directory",
+        "path": "~/.claude/plugins/framework-dev"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "framework-dev@framework-dev-local": true
+  }
+}
+```
+
+### Option 3: CLI with --plugin-dir
+
+```bash
+claude --plugin-dir /path/to/framework-developer-agent
+```
 
 ## Usage
 
-Once installed, you can invoke the agent in Claude Code using the Task tool:
+### Slash Command
 
 ```
-"Help me plan the framework for my new project"
+/framework-dev [project description]
 ```
 
-Or directly reference the agent when starting a new project discussion.
+Example:
+```
+/framework-dev I want to build an offline-first task management app for teams
+```
+
+### Agent Invocation
+
+The `framework-developer` agent can also be invoked via the Task tool for autonomous operation.
 
 ## Workflow Phases
 
-| Phase | Name | Purpose |
-|-------|------|---------|
-| 1 | **Discovery** | Understand project vision, target users, major modules |
-| 2 | **Structure** | Break down into sub-components, map dependencies, identify risks |
-| 3 | **Planning** | Define API contracts, coding tasks, implementation sequence |
-| 4 | **Agents** | Research available LLMs and assign tasks based on capabilities |
-| 5 | **Execution** | Track progress, coordinate agents, handle handoffs |
-| 6 | **Integration** | Merge work, resolve conflicts, generate final report |
+| Phase | Goal | Output |
+|-------|------|--------|
+| 1. Discovery | Understand project vision | Vision statement, target users, modules |
+| 2. Structure | Break down into components | Dependency graph, Mermaid diagrams |
+| 3. Planning | Define implementation | API specs, coding sequence |
+| 4. Agents | Assign work to LLMs | Agent table, tailored prompts |
+| 5. Execution | Coordinate work | Progress dashboard, handoffs |
+| 6. Integration | Merge and finalize | Final report, architecture docs |
 
 ## Key Principles
 
-### Research-First
-The agent NEVER assumes or hallucinates. Every recommendation is:
-- Researched using WebSearch/WebFetch
-- Backed by credible sources with URLs
-- Presented with pros/cons for user decision
+1. **Never Assume** - Research everything, cite sources
+2. **Present Options** - User makes final decisions
+3. **One Question at a Time** - Avoid overwhelming
+4. **Confirm Understanding** - Summarize before proceeding
 
-### Multi-Agent Coordination
-When you have multiple LLMs available (Claude, Qwen, Gemini, GPT-4, etc.):
-1. Agent researches each LLM's capabilities from official sources
-2. Presents findings with source URLs
-3. Asks about your experience with each
-4. Recommends task assignments based on research + your input
-5. Generates tailored prompts for each agent
-
-### State Management
-The agent tracks:
-- Current phase
-- Decisions made (with sources)
-- Modules and dependencies
-- Risks identified
-- Agent assignments
-
-You can save/resume sessions at any checkpoint.
-
-## Example Session
+## Plugin Structure
 
 ```
-User: I want to build a task management app
-
-Agent: Great! Let me understand your vision better.
-
-**Question 1:** What specific problem does this task management app solve
-that existing solutions (Todoist, Trello, etc.) don't address?
-
-User: It's for teams that need offline-first capability
-
-Agent: Interesting - offline-first for teams is a specific niche.
-
-Let me research offline-first patterns...
-[WebSearch: "offline-first architecture patterns 2025"]
-
-Based on my research:
-- **Conflict Resolution** is critical (Source: [URL])
-- **CRDT patterns** are commonly used (Source: [URL])
-
-**Question 2:** How large are the teams you're targeting?
-...
+framework-developer-agent/
+├── .claude-plugin/
+│   └── plugin.json          # Plugin manifest
+├── agents/
+│   └── framework-developer.md   # Agent definition
+├── commands/
+│   └── framework-dev.md     # Slash command
+├── LICENSE
+└── README.md
 ```
-
-## Generated Outputs
-
-The agent produces:
-- **Architecture diagrams** (Mermaid format)
-- **API specifications** (endpoints, schemas)
-- **Coding task sequences** (dependency-ordered)
-- **Agent prompts** (tailored for each LLM)
-- **Final project reports** (comprehensive documentation)
-
-## Requirements
-
-- [Claude Code](https://claude.com/claude-code) CLI installed
-- Active Claude subscription
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file
-
-## Contributing
-
-Contributions welcome! Please feel free to submit issues or pull requests.
-
-## Author
-
-Built with Claude Code
+MIT
