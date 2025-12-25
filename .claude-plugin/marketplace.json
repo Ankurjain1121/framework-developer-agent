@@ -1,0 +1,15 @@
+{
+  "name": "framework-dev-marketplace",
+  "description": "Framework Developer Orchestrator - Plan and architect software projects",
+  "plugins": [
+    {
+      "name": "framework-dev",
+      "description": "Project architecture orchestrator that helps finalize frameworks for new projects through structured discussion, research-backed recommendations, and multi-agent coordination.",
+      "version": "1.0.0",
+      "source": {
+        "source": "github",
+        "repo": "Ankurjain1121/framework-developer-agent"
+      }
+    }
+  ]
+}
