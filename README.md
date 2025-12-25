@@ -16,7 +16,7 @@ A Claude Code agent that helps you plan and finalize software project frameworks
 
 ```bash
 # Clone this repository
-git clone https://github.com/YOUR_USERNAME/framework-developer-agent.git
+git clone https://github.com/Ankurjain1121/framework-developer-agent.git
 
 # Copy the agent definition to your Claude Code agents folder
 cp framework-developer-agent/.claude/agents/framework-developer.md ~/.claude/agents/
