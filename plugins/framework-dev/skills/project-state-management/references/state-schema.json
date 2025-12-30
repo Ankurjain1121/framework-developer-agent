@@ -1,0 +1,528 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Ankurjain1121/framework-developer-agent/schemas/project-state.json",
+  "title": "Framework Developer Project State",
+  "description": "Schema for the project state file used by the Framework Developer Orchestrator to track project progress across sessions",
+  "type": "object",
+  "required": [
+    "projectName",
+    "version",
+    "createdAt",
+    "updatedAt",
+    "currentPhase",
+    "phases",
+    "decisions",
+    "modules",
+    "agents",
+    "handoffs",
+    "risks"
+  ],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project being developed",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": ["TaskMaster Pro", "E-Commerce Platform", "Healthcare Portal"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the state file format",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0",
+      "examples": ["1.0.0", "1.1.0", "2.0.0"]
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the project was first initialized",
+      "format": "date-time",
+      "examples": ["2025-12-30T10:00:00.000Z"]
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of the last state modification",
+      "format": "date-time",
+      "examples": ["2025-12-30T15:30:00.000Z"]
+    },
+    "currentPhase": {
+      "type": "integer",
+      "description": "The current workflow phase (1-6)",
+      "minimum": 1,
+      "maximum": 6,
+      "examples": [1, 3, 5]
+    },
+    "phases": {
+      "type": "object",
+      "description": "Status and timestamps for each of the 6 workflow phases",
+      "required": ["1", "2", "3", "4", "5", "6"],
+      "properties": {
+        "1": { "$ref": "#/definitions/phase" },
+        "2": { "$ref": "#/definitions/phase" },
+        "3": { "$ref": "#/definitions/phase" },
+        "4": { "$ref": "#/definitions/phase" },
+        "5": { "$ref": "#/definitions/phase" },
+        "6": { "$ref": "#/definitions/phase" }
+      },
+      "additionalProperties": false
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Log of all decisions made during the project planning process",
+      "items": { "$ref": "#/definitions/decision" },
+      "default": []
+    },
+    "modules": {
+      "type": "array",
+      "description": "List of modules/components defined for the project architecture",
+      "items": { "$ref": "#/definitions/module" },
+      "default": []
+    },
+    "agents": {
+      "type": "array",
+      "description": "LLM agents assigned to work on the project",
+      "items": { "$ref": "#/definitions/agent" },
+      "default": []
+    },
+    "handoffs": {
+      "type": "array",
+      "description": "Record of handoffs between agents",
+      "items": { "$ref": "#/definitions/handoff" },
+      "default": []
+    },
+    "risks": {
+      "type": "array",
+      "description": "Risk register for identified project risks",
+      "items": { "$ref": "#/definitions/risk" },
+      "default": []
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional additional metadata for the project",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Brief description of the project"
+        },
+        "targetUsers": {
+          "type": "string",
+          "description": "Description of target users"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Industry or domain of the project"
+        },
+        "techStack": {
+          "type": "object",
+          "description": "Technology stack decisions",
+          "properties": {
+            "frontend": { "type": "string" },
+            "backend": { "type": "string" },
+            "database": { "type": "string" },
+            "infrastructure": { "type": "string" }
+          }
+        },
+        "repository": {
+          "type": "string",
+          "description": "Git repository URL",
+          "format": "uri"
+        },
+        "documentation": {
+          "type": "string",
+          "description": "Documentation URL",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "phase": {
+      "type": "object",
+      "description": "Status and timing information for a single phase",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Current status of the phase",
+          "enum": ["pending", "in_progress", "completed", "skipped"],
+          "examples": ["pending", "in_progress", "completed"]
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the phase was started",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the phase was completed",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes about the phase"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "in_progress" } }
+          },
+          "then": {
+            "required": ["startedAt"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } }
+          },
+          "then": {
+            "required": ["startedAt", "completedAt"]
+          }
+        }
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "description": "A single decision recorded during the project planning",
+      "required": ["id", "topic", "choice", "date"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the decision",
+          "pattern": "^D\\d{3,}$",
+          "examples": ["D001", "D002", "D015"]
+        },
+        "topic": {
+          "type": "string",
+          "description": "The topic or category of the decision",
+          "minLength": 1,
+          "maxLength": 100,
+          "examples": ["Database", "Authentication", "API Style", "Hosting Provider"]
+        },
+        "choice": {
+          "type": "string",
+          "description": "The decision that was made",
+          "minLength": 1,
+          "examples": ["PostgreSQL", "JWT with refresh tokens", "REST", "AWS"]
+        },
+        "source": {
+          "type": "string",
+          "description": "URL or reference supporting this decision (should always be provided)",
+          "examples": ["https://www.postgresql.org/docs/", "user-input", "team-discussion"]
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Explanation of why this decision was made",
+          "examples": ["ACID compliance needed for financial transactions"]
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the decision was made",
+          "format": "date-time"
+        },
+        "alternatives": {
+          "type": "array",
+          "description": "Other options that were considered",
+          "items": {
+            "type": "object",
+            "properties": {
+              "option": { "type": "string" },
+              "reason_rejected": { "type": "string" }
+            },
+            "required": ["option"]
+          }
+        },
+        "reversible": {
+          "type": "boolean",
+          "description": "Whether this decision can be easily changed later",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "module": {
+      "type": "object",
+      "description": "A module or component in the project architecture",
+      "required": ["name", "status", "dependencies"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for the module",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "minLength": 1,
+          "maxLength": 50,
+          "examples": ["core", "auth", "user-management", "notifications"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the module's purpose",
+          "maxLength": 500,
+          "examples": ["Core utilities and shared types", "Authentication and authorization"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current development status of the module",
+          "enum": ["defined", "in_development", "completed", "deprecated"],
+          "examples": ["defined", "in_development", "completed"]
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "List of module names this module depends on",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "examples": [["core"], ["core", "auth"]]
+        },
+        "definedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the module was defined",
+          "format": "date-time"
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "Name of the agent assigned to develop this module"
+        },
+        "estimatedEffort": {
+          "type": "string",
+          "description": "Estimated effort to complete the module",
+          "examples": ["2 hours", "1 day", "1 week"]
+        },
+        "apis": {
+          "type": "array",
+          "description": "List of API endpoints provided by this module",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+              },
+              "path": { "type": "string" },
+              "description": { "type": "string" }
+            },
+            "required": ["method", "path"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "agent": {
+      "type": "object",
+      "description": "An LLM agent assigned to work on the project",
+      "required": ["name", "llm", "tasks", "status"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique identifier for the agent",
+          "minLength": 1,
+          "maxLength": 50,
+          "examples": ["Claude-Backend", "GPT-Frontend", "Gemini-Testing"]
+        },
+        "llm": {
+          "type": "string",
+          "description": "The LLM model powering this agent",
+          "examples": ["claude-3-opus", "gpt-4-turbo", "gemini-pro", "claude-3-sonnet"]
+        },
+        "tasks": {
+          "type": "array",
+          "description": "Task IDs assigned to this agent",
+          "items": {
+            "type": "string",
+            "pattern": "^T\\d{3,}$"
+          },
+          "uniqueItems": true,
+          "examples": [["T001", "T002"], ["T003", "T004", "T005"]]
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "Capabilities this agent excels at",
+          "items": { "type": "string" },
+          "examples": [["complex reasoning", "API design"], ["UI components", "responsive design"]]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the agent",
+          "enum": ["assigned", "active", "waiting", "completed", "blocked"],
+          "examples": ["assigned", "active", "completed"]
+        },
+        "assignedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the agent was assigned",
+          "format": "date-time"
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the agent started work",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the agent completed all tasks",
+          "format": "date-time"
+        },
+        "progress": {
+          "type": "integer",
+          "description": "Percentage of work completed (0-100)",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "blockedBy": {
+          "type": "string",
+          "description": "Description of what is blocking the agent"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The tailored prompt generated for this agent"
+        }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "description": "A handoff of work or artifacts between agents",
+      "required": ["id", "from", "to", "status", "initiatedAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the handoff",
+          "pattern": "^HO-\\d{3,}$",
+          "examples": ["HO-001", "HO-002", "HO-015"]
+        },
+        "from": {
+          "type": "string",
+          "description": "Name of the source agent",
+          "minLength": 1,
+          "examples": ["Claude-Backend", "GPT-Frontend"]
+        },
+        "to": {
+          "type": "string",
+          "description": "Name of the target agent",
+          "minLength": 1,
+          "examples": ["Gemini-Testing", "Claude-Integration"]
+        },
+        "artifact": {
+          "type": "string",
+          "description": "Description of what is being handed off",
+          "examples": ["API specifications", "Component library", "Test results"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the receiving agent"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the handoff",
+          "enum": ["pending", "in_review", "completed", "rejected"],
+          "examples": ["pending", "completed"]
+        },
+        "initiatedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the handoff was initiated",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the handoff was completed",
+          "format": "date-time"
+        },
+        "rejectionReason": {
+          "type": "string",
+          "description": "Reason for rejection if status is 'rejected'"
+        },
+        "files": {
+          "type": "array",
+          "description": "List of files included in the handoff",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "properties": { "status": { "const": "rejected" } }
+      },
+      "then": {
+        "required": ["rejectionReason"]
+      }
+    },
+    "risk": {
+      "type": "object",
+      "description": "A risk identified during project planning",
+      "required": ["id", "description", "severity", "mitigation", "status", "identifiedAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the risk",
+          "pattern": "^R\\d{3,}$",
+          "examples": ["R001", "R002", "R010"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the risk",
+          "minLength": 10,
+          "maxLength": 500,
+          "examples": ["Offline sync conflicts may be complex to resolve"]
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level of the risk",
+          "enum": ["low", "medium", "high", "critical"],
+          "examples": ["low", "medium", "high", "critical"]
+        },
+        "mitigation": {
+          "type": "string",
+          "description": "Strategy to mitigate the risk",
+          "minLength": 5,
+          "examples": ["Use CRDT for conflict resolution", "Implement circuit breaker pattern"]
+        },
+        "owner": {
+          "type": "string",
+          "description": "Agent or person responsible for managing this risk"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the risk",
+          "enum": ["open", "mitigating", "resolved", "accepted"],
+          "examples": ["open", "resolved"]
+        },
+        "identifiedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the risk was identified",
+          "format": "date-time"
+        },
+        "resolvedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when the risk was resolved",
+          "format": "date-time"
+        },
+        "probability": {
+          "type": "string",
+          "description": "Likelihood of the risk occurring",
+          "enum": ["low", "medium", "high"],
+          "examples": ["low", "medium", "high"]
+        },
+        "impact": {
+          "type": "string",
+          "description": "Impact if the risk materializes",
+          "enum": ["low", "medium", "high", "critical"],
+          "examples": ["medium", "high"]
+        },
+        "triggers": {
+          "type": "array",
+          "description": "Warning signs that the risk is materializing",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "properties": { "status": { "const": "resolved" } }
+      },
+      "then": {
+        "required": ["resolvedAt"]
+      }
+    }
+  }
+}

@@ -1,8 +1,20 @@
 {
   "name": "framework-dev",
-  "description": "Project architecture orchestrator that helps finalize frameworks for new projects through structured discussion, research-backed recommendations, and multi-agent coordination.",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Project architecture orchestrator that helps finalize frameworks for new projects through structured 6-phase discussion, research-backed recommendations, multi-agent coordination, and comprehensive blueprint generation.",
   "author": {
-    "name": "Intel"
-  }
+    "name": "Ankur Jain",
+    "email": "ankurjain1121@gmail.com"
+  },
+  "repository": "https://github.com/Ankurjain1121/framework-developer-agent",
+  "license": "MIT",
+  "keywords": [
+    "framework",
+    "architecture",
+    "planning",
+    "multi-agent",
+    "orchestration",
+    "blueprints",
+    "project-planning"
+  ]
 }

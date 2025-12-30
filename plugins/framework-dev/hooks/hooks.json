@@ -1,0 +1,14 @@
+{
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "description": "Check for existing framework blueprints on session start",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Check if `.framework-blueprints/00-project-state.json` exists in the current directory. If it exists, read it and inform the user that a previous framework development session was found, showing the project name, current phase, and last update date. Ask if they want to resume or start fresh. If no state file exists, do nothing - proceed normally."
+        }
+      ]
+    }
+  ]
+}
