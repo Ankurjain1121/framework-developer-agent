@@ -109,14 +109,11 @@ Or invoke through natural language:
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
-| `SessionStart` | On session begin | Restore state, check Git status, list checkpoints |
-| `PreTask` | Before each task | Sync with master plan, prevent context drift |
-| `PostTask` | After each task | Validate changes, update state, suggest Git commit |
-| `PreWrite` | Before file writes | Just-in-time reading of contracts/outlines |
-| `PhaseTransition` | Phase changes | Create checkpoint, Git tag, backup state |
-| `ErrorRecovery` | On errors | Re-sync context, offer Git recovery |
-| `HandoffComplete` | After handoffs | Git commit handoff, update state |
-| `BlueprintModified` | Blueprint changes | Track changes, suggest commits, auto-backup |
+| `SessionStart` | On session begin | Check for existing state, offer to resume |
+| `UserPromptSubmit` | Before processing prompt | Validate request aligns with current phase |
+| `PreToolUse` | Before Write/Edit | Verify API contracts before code changes |
+| `PostToolUse` | After Write/Edit | Update state after blueprint modifications |
+| `Stop` | When response completes | Remind about checkpoints and git commits |
 
 ## Key Principles
 
