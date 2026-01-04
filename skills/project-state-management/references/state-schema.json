@@ -1,0 +1,310 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Ankurjain1121/framework-developer-agent/schemas/project-state.json",
+  "title": "Framework Developer Project State",
+  "description": "Schema for the project state file used by the Framework Developer Orchestrator to track project progress across sessions",
+  "type": "object",
+  "required": [
+    "projectName",
+    "version",
+    "createdAt",
+    "updatedAt",
+    "currentPhase",
+    "phases",
+    "decisions",
+    "modules",
+    "agents",
+    "handoffs",
+    "risks"
+  ],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project being developed",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the state file format",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the project was first initialized",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of the last state modification",
+      "format": "date-time"
+    },
+    "currentPhase": {
+      "type": "integer",
+      "description": "The current workflow phase (1-6)",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "phases": {
+      "type": "object",
+      "description": "Status and timestamps for each of the 6 workflow phases",
+      "required": ["1", "2", "3", "4", "5", "6"],
+      "additionalProperties": false,
+      "properties": {
+        "1": { "$ref": "#/definitions/phase" },
+        "2": { "$ref": "#/definitions/phase" },
+        "3": { "$ref": "#/definitions/phase" },
+        "4": { "$ref": "#/definitions/phase" },
+        "5": { "$ref": "#/definitions/phase" },
+        "6": { "$ref": "#/definitions/phase" }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Log of all decisions made during the project planning process",
+      "items": { "$ref": "#/definitions/decision" },
+      "default": []
+    },
+    "modules": {
+      "type": "array",
+      "description": "List of modules/components defined for the project architecture",
+      "items": { "$ref": "#/definitions/module" },
+      "default": []
+    },
+    "agents": {
+      "type": "array",
+      "description": "LLM agents assigned to work on the project",
+      "items": { "$ref": "#/definitions/agent" },
+      "default": []
+    },
+    "handoffs": {
+      "type": "array",
+      "description": "Record of handoffs between agents",
+      "items": { "$ref": "#/definitions/handoff" },
+      "default": []
+    },
+    "risks": {
+      "type": "array",
+      "description": "Risk register for identified project risks",
+      "items": { "$ref": "#/definitions/risk" },
+      "default": []
+    },
+    "checkpoints": {
+      "type": "array",
+      "description": "State snapshots taken at 50% and 100% of each phase",
+      "items": { "$ref": "#/definitions/checkpoint" },
+      "default": []
+    },
+    "criticalDetails": {
+      "type": "object",
+      "description": "Important details that must survive context compaction",
+      "properties": {
+        "ports": {
+          "type": "object",
+          "description": "Port numbers for various services",
+          "additionalProperties": { "type": "integer" }
+        },
+        "envVars": {
+          "type": "array",
+          "description": "Environment variables required",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            },
+            "required": ["name"]
+          }
+        },
+        "nonStandardPaths": {
+          "type": "object",
+          "description": "Paths that differ from convention",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "expected": { "type": "string" },
+              "actual": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "apiQuirks": {
+          "type": "array",
+          "description": "Non-obvious API behaviors",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "phase": {
+      "type": "object",
+      "description": "Status and timing information for a single phase",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped"]
+        },
+        "progress": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "checkpointAt50": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the 50% checkpoint was created"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["id", "topic", "choice", "date"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^D\\d{3,}$"
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "choice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "description": "URL or reference supporting this decision"
+        },
+        "reasoning": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["name", "status", "dependencies"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["defined", "in_development", "completed", "deprecated"]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "assignedTo": {
+          "type": "string"
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["name", "llm", "tasks", "status"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "tasks": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["assigned", "active", "waiting", "completed", "blocked"]
+        },
+        "progress": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["id", "from", "to", "status", "initiatedAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^HO-\\d{3,}$"
+        },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "artifact": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_review", "completed", "rejected"]
+        },
+        "initiatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "required": ["id", "description", "severity", "mitigation", "status"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^R\\d{3,}$"
+        },
+        "description": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "mitigation": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["open", "mitigating", "resolved", "accepted"]
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "required": ["phase", "progress", "createdAt", "summaryFile"],
+      "properties": {
+        "phase": { "type": "integer" },
+        "progress": { "type": "integer" },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summaryFile": {
+          "type": "string",
+          "description": "Path to the state-summary-phase-N.md file"
+        }
+      }
+    }
+  }
+}

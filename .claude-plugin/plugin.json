@@ -1,0 +1,32 @@
+{
+  "name": "framework-dev",
+  "version": "3.0.0",
+  "description": "Project architecture orchestrator with context-safe state management, Git-integrated checkpoints, and comprehensive blueprint generation. Features 6-phase workflow, research-backed recommendations, multi-agent coordination, validation system, and export capabilities. Includes 'Small Circle' strategy to prevent context drift in long sessions.",
+  "author": {
+    "name": "Ankur Jain",
+    "email": "ankurjain1121@gmail.com"
+  },
+  "repository": "https://github.com/Ankurjain1121/framework-developer-agent",
+  "license": "MIT",
+  "keywords": [
+    "framework",
+    "architecture",
+    "planning",
+    "multi-agent",
+    "orchestration",
+    "blueprints",
+    "project-planning",
+    "context-management",
+    "state-persistence",
+    "git-integration",
+    "validation",
+    "checkpoints",
+    "handoffs",
+    "llm-coordination"
+  ],
+  "changelog": {
+    "3.0.0": "Major upgrade - Added 9 missing skills (handoff-protocol, llm-capability-matching, blueprint-generation, architecture-decision-records, architecture-patterns, deployment-pipeline-design, e2e-testing-patterns, openapi-spec-generation, research-workflow), 3 new commands (/validate, /rollback, /export), Git-integrated hooks with auto-checkpointing, HandoffComplete and BlueprintModified events, validation system for blueprint integrity, export to PDF/HTML/Notion/Markdown",
+    "2.1.0": "Added Small Circle strategy - Context Hygiene rules, PreTask/PostTask hooks, /checkpoint command, mandatory state snapshots",
+    "2.0.0": "Initial 6-phase workflow with blueprint generation"
+  }
+}
