@@ -1,3 +1,7 @@
+---
+description: Use this skill to track and persist project state across sessions. Provides state file schema, checkpointing protocols, and context recovery procedures for the Framework Developer Orchestrator.
+---
+
 # Project State Management Skill
 
 This skill teaches the Framework Developer Orchestrator how to track and persist project state across sessions, ensuring continuity and enabling seamless resumption of work.
