@@ -26,6 +26,18 @@ I'll help you plan your project through 6 phases, creating comprehensive bluepri
 - **Blueprint files** - All decisions documented in `.framework-blueprints/`
 - **Resumable** - Can continue from any checkpoint
 - **Multi-agent** - Optimizes work division across LLMs
+- **Context-safe** - State persisted to files, not chat memory
+
+## Context Hygiene (Prevents Drift)
+
+This orchestrator uses a **"Small Circle"** strategy to prevent context window issues:
+
+1. **File-based memory** - All state stored in blueprint files
+2. **Just-in-time reading** - Re-reads contracts before writing code
+3. **Link verification** - Validates paths after creating files
+4. **Checkpoints** - Captures critical details before they're lost
+
+Use `/checkpoint` at any time to refresh my context from files.
 
 ## Getting Started
 
@@ -67,6 +79,11 @@ I'll check for `.framework-blueprints/00-project-state.json` to find your previo
 # Start with specific focus
 /framework-dev Build an e-commerce platform with offline-first mobile app
 ```
+
+## Related Commands
+
+- `/checkpoint` - Refresh context from blueprint files
+- `/checkpoint full` - Full re-read of all blueprints + recent source files
 
 ---
 

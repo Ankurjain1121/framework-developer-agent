@@ -1,276 +1,358 @@
 ---
-description: Use this skill when the user asks about "architecture patterns", "clean architecture", "hexagonal architecture", "DDD", "domain-driven design", "ports and adapters", "layered architecture", "microservices vs monolith", "CQRS", "event sourcing", or needs guidance on choosing architectural patterns during Phase 2 (Structure) of framework planning.
+description: Use this skill during Phase 2 (Structure) to select appropriate architecture patterns. Covers MVC, Hexagonal, Clean Architecture, Microservices, and provides decision criteria for each.
 ---
 
 # Architecture Patterns for Framework Development
 
-This skill provides guidance on selecting and implementing architecture patterns during the framework planning process. Use it during Phase 2 (Structure) when breaking down modules and defining relationships.
+This skill guides the selection of appropriate architecture patterns during Phase 2, providing decision criteria, trade-offs, and implementation guidance.
 
-## Decision Framework
+---
 
-Before recommending a pattern, evaluate these criteria:
+## Pattern Decision Matrix
 
-| Criterion | Questions to Ask |
-|-----------|------------------|
-| Team Size | How many developers? Can they handle complexity? |
-| Domain Complexity | Is business logic complex or straightforward? |
-| Scale Requirements | Expected users? Data volume? Growth trajectory? |
-| Change Frequency | Which parts change most often? |
-| Integration Needs | How many external systems? |
-| Deployment Model | Monolith, modular monolith, or distributed? |
+| Pattern | Best For | Team Size | Complexity | Scalability |
+|---------|----------|-----------|------------|-------------|
+| **MVC** | Simple CRUD apps | 1-3 | Low | Medium |
+| **Layered** | Traditional enterprise | 3-10 | Medium | Medium |
+| **Hexagonal** | Domain-focused apps | 3-15 | Medium-High | High |
+| **Clean** | Complex business logic | 5-20 | High | High |
+| **Microservices** | Large distributed systems | 10+ | Very High | Very High |
+| **Modular Monolith** | Growing apps, unclear boundaries | 3-10 | Medium | Medium-High |
 
-## Core Patterns
+---
 
-### Clean Architecture
+## Pattern Details
 
-Apply Clean Architecture when the project has complex business rules that must remain independent of frameworks, databases, and UI.
+### MVC (Model-View-Controller)
 
 ```
-Structure:
-- Entities (innermost): Core business objects
-- Use Cases: Application-specific business rules
-- Interface Adapters: Controllers, presenters, gateways
-- Frameworks & Drivers (outermost): Web, DB, external interfaces
+┌─────────────────────────────────────┐
+│            Controller               │
+│    (Handles requests, routes)       │
+└────────────┬───────────┬────────────┘
+             │           │
+             ▼           ▼
+      ┌──────────┐ ┌──────────┐
+      │  Model   │ │   View   │
+      │ (Data)   │ │   (UI)   │
+      └──────────┘ └──────────┘
 ```
-
-```mermaid
-graph TB
-    subgraph External["Frameworks & Drivers"]
-        Web[Web Framework]
-        DB[(Database)]
-        UI[UI Components]
-    end
-
-    subgraph Adapters["Interface Adapters"]
-        Controllers[Controllers]
-        Presenters[Presenters]
-        Gateways[Gateways]
-    end
-
-    subgraph UseCases["Use Cases"]
-        UC1[Create Order]
-        UC2[Process Payment]
-        UC3[Send Notification]
-    end
-
-    subgraph Entities["Entities"]
-        E1[Order]
-        E2[Customer]
-        E3[Product]
-    end
-
-    External --> Adapters
-    Adapters --> UseCases
-    UseCases --> Entities
-```
-
-**Dependency Rule:** Source code dependencies point inward only. Inner layers know nothing about outer layers.
-
-**When to Use:**
-- Business logic must survive framework changes
-- Multiple delivery mechanisms (API, CLI, queue workers)
-- Long-lived projects where maintainability matters
-- Teams with varying skill levels (clear boundaries help)
-
-**Phase 2 Integration:** Define entities first, then use cases, then adapters. Map each module to a layer.
-
-### Hexagonal Architecture (Ports and Adapters)
-
-Apply Hexagonal Architecture when the system must integrate with multiple external systems and you want to isolate the core from infrastructure concerns.
-
-```mermaid
-graph LR
-    subgraph Driving["Driving Adapters (Primary)"]
-        REST[REST API]
-        CLI[CLI]
-        Queue[Message Queue]
-    end
-
-    subgraph Core["Application Core"]
-        DP[Driving Ports]
-        App[Application Services]
-        Domain[Domain Logic]
-        DRP[Driven Ports]
-    end
-
-    subgraph Driven["Driven Adapters (Secondary)"]
-        DBAdapter[DB Adapter]
-        EmailAdapter[Email Adapter]
-        CacheAdapter[Cache Adapter]
-    end
-
-    REST --> DP
-    CLI --> DP
-    Queue --> DP
-    DP --> App
-    App --> Domain
-    App --> DRP
-    DRP --> DBAdapter
-    DRP --> EmailAdapter
-    DRP --> CacheAdapter
-```
-
-**Port Types:**
-- **Driving Ports (Primary):** Interfaces that the application exposes (e.g., `OrderService`)
-- **Driven Ports (Secondary):** Interfaces that the application requires (e.g., `OrderRepository`)
-
-**When to Use:**
-- Multiple input channels (REST, GraphQL, CLI, events)
-- Multiple output channels (different databases, external APIs)
-- Need to swap implementations easily (testing, migration)
-- Microservices with clear bounded contexts
-
-**Phase 3 Integration:** Define ports as API contracts. Each port becomes an interface specification.
-
-### Domain-Driven Design (DDD)
-
-Apply DDD patterns when the problem domain is complex and requires close collaboration between developers and domain experts.
-
-**Strategic Patterns:**
-
-```mermaid
-graph TB
-    subgraph Subdomain1["Orders Context"]
-        Order[Order Aggregate]
-        OrderLine[Order Line]
-        OrderRepo[Order Repository]
-    end
-
-    subgraph Subdomain2["Inventory Context"]
-        Product[Product Aggregate]
-        Stock[Stock Level]
-        InvRepo[Inventory Repository]
-    end
-
-    subgraph Subdomain3["Shipping Context"]
-        Shipment[Shipment Aggregate]
-        Tracking[Tracking Info]
-        ShipRepo[Shipment Repository]
-    end
-
-    Subdomain1 -->|Domain Event| Subdomain2
-    Subdomain1 -->|Domain Event| Subdomain3
-```
-
-**Tactical Patterns:**
-- **Aggregates:** Cluster of domain objects treated as a unit
-- **Entities:** Objects with identity that persists over time
-- **Value Objects:** Immutable objects defined by attributes
-- **Domain Events:** Record of something significant that happened
-- **Repositories:** Abstract data access for aggregates
-
-**When to Use:**
-- Complex business domains with rich rules
-- Need ubiquitous language between devs and stakeholders
-- Multiple bounded contexts with different models
-- Long-term strategic investment in the domain model
-
-**Phase 1-2 Integration:** Use DDD discovery techniques (event storming, domain storytelling) during Phase 1. Map bounded contexts in Phase 2.
-
-### Layered Architecture
-
-Apply traditional layered architecture for simpler applications with straightforward CRUD operations.
-
-```mermaid
-graph TB
-    Presentation[Presentation Layer] --> Business[Business Layer]
-    Business --> Persistence[Persistence Layer]
-    Persistence --> Database[(Database)]
-```
-
-**Layers:**
-- **Presentation:** UI components, API controllers
-- **Business:** Business rules, validation, workflows
-- **Persistence:** Data access, ORM, caching
 
 **When to Use:**
 - Simple CRUD applications
-- Small teams with limited architecture experience
-- Rapid prototyping or MVP development
-- Applications with minimal business logic
+- Quick prototypes
+- Small team (1-3 developers)
+- Short-lived projects
 
-**Caution:** Avoid for complex domains; leads to anemic domain models and transaction scripts.
+**Pros:**
+- Simple to understand
+- Fast to implement
+- Well-documented pattern
 
-### CQRS (Command Query Responsibility Segregation)
+**Cons:**
+- Can become messy as app grows
+- Tight coupling between layers
+- Hard to test in isolation
 
-Apply CQRS when read and write patterns differ significantly or when you need different models for queries and commands.
+**Example Structure:**
+```
+src/
+├── controllers/
+│   ├── userController.ts
+│   └── taskController.ts
+├── models/
+│   ├── User.ts
+│   └── Task.ts
+└── views/
+    └── (templates or React components)
+```
 
-```mermaid
-graph TB
-    Client[Client]
+---
 
-    subgraph Commands["Command Side"]
-        CMD[Command Handler]
-        WriteModel[Write Model]
-        WriteDB[(Write DB)]
-    end
+### Layered Architecture
 
-    subgraph Queries["Query Side"]
-        QRY[Query Handler]
-        ReadModel[Read Model]
-        ReadDB[(Read DB)]
-    end
-
-    Client -->|Commands| CMD
-    Client -->|Queries| QRY
-    CMD --> WriteModel
-    WriteModel --> WriteDB
-    WriteDB -->|Sync/Events| ReadDB
-    QRY --> ReadModel
-    ReadModel --> ReadDB
+```
+┌─────────────────────────────────────┐
+│       Presentation Layer            │
+│    (Controllers, Views, DTOs)       │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│        Business Layer               │
+│    (Services, Domain Logic)         │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│         Data Access Layer           │
+│    (Repositories, ORM)              │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│           Database                  │
+└─────────────────────────────────────┘
 ```
 
 **When to Use:**
-- Read/write ratio heavily skewed (e.g., 100:1 reads to writes)
-- Complex queries that don't fit the write model
-- Need to scale reads and writes independently
-- Combined with event sourcing for audit trails
+- Traditional enterprise apps
+- Clear separation needed
+- Team familiar with layers
 
-**Phase 3 Integration:** Separate command APIs from query APIs. Define sync mechanisms.
+**Pros:**
+- Clear responsibilities
+- Each layer independently deployable
+- Easy to understand
 
-## Pattern Comparison Matrix
+**Cons:**
+- Changes ripple through layers
+- Can lead to anemic domain model
+- Tight vertical coupling
 
-| Pattern | Complexity | Best For | Team Size | Learning Curve |
-|---------|------------|----------|-----------|----------------|
-| Layered | Low | Simple CRUD | 1-3 | Low |
-| Clean | Medium | Complex business logic | 3-10 | Medium |
-| Hexagonal | Medium | Many integrations | 3-10 | Medium |
-| DDD | High | Complex domains | 5+ | High |
-| CQRS | High | Asymmetric read/write | 5+ | High |
-| Microservices | Very High | Large scale, multiple teams | 10+ | Very High |
+---
 
-## Framework Phase Mapping
+### Hexagonal Architecture (Ports & Adapters)
 
-| Pattern | Phase 1 | Phase 2 | Phase 3 | Phase 4 |
-|---------|---------|---------|---------|---------|
-| Clean | Identify entities | Layer modules | Use case APIs | Core team does entities |
-| Hexagonal | Identify integrations | Define ports | Port contracts | Adapter teams separate |
-| DDD | Event storming | Bounded contexts | Aggregate APIs | Context per team |
-| CQRS | Identify queries vs commands | Separate models | Dual APIs | Command/query teams |
+```
+                    ┌─────────────────┐
+                    │   REST API      │
+                    │   (Adapter)     │
+                    └────────┬────────┘
+                             │
+┌─────────────┐    ┌─────────▼─────────┐    ┌─────────────┐
+│   CLI       │◄───│                   │───►│  PostgreSQL │
+│ (Adapter)   │    │   DOMAIN CORE     │    │  (Adapter)  │
+└─────────────┘    │                   │    └─────────────┘
+                   │   (Business       │
+┌─────────────┐    │    Logic)         │    ┌─────────────┐
+│  Message    │◄───│                   │───►│   Redis     │
+│  Queue      │    │   [Ports define   │    │  (Adapter)  │
+│ (Adapter)   │    │    interfaces]    │    └─────────────┘
+└─────────────┘    └───────────────────┘
+```
 
-## Implementation Checklist
+**When to Use:**
+- Domain logic is complex
+- Need to swap infrastructure
+- Long-lived applications
+- Multiple input/output channels
 
-When applying a pattern during Phase 2:
+**Pros:**
+- Domain isolated from infrastructure
+- Easy to test (mock adapters)
+- Swap databases/frameworks easily
+- Clear boundaries
 
-1. **Document the decision** using an Architecture Decision Record (ADR)
-2. **Map modules to pattern elements** (layers, ports, contexts)
-3. **Define boundaries** with clear interfaces
-4. **Identify cross-cutting concerns** (logging, auth, transactions)
-5. **Plan for testing** at each boundary
-6. **Create Mermaid diagrams** showing the structure
+**Cons:**
+- More initial setup
+- Can feel over-engineered for simple apps
+- Learning curve
 
-## Anti-Patterns to Avoid
+**Example Structure:**
+```
+src/
+├── domain/                 # Core business logic
+│   ├── entities/
+│   │   └── User.ts
+│   ├── services/
+│   │   └── UserService.ts
+│   └── ports/              # Interfaces
+│       ├── UserRepository.ts
+│       └── NotificationService.ts
+├── adapters/
+│   ├── primary/            # Driving adapters
+│   │   ├── rest/
+│   │   │   └── UserController.ts
+│   │   └── cli/
+│   └── secondary/          # Driven adapters
+│       ├── persistence/
+│       │   └── PostgresUserRepository.ts
+│       └── notification/
+│           └── EmailNotificationService.ts
+└── config/
+    └── dependencies.ts     # Dependency injection
+```
 
-- **Big Ball of Mud:** No clear structure, everything depends on everything
-- **Golden Hammer:** Using one pattern for all problems
-- **Premature Distribution:** Microservices before you need them
-- **Leaky Abstractions:** Inner layers knowing about outer layer details
-- **Anemic Domain Model:** Entities with only getters/setters, logic in services
+---
 
-## Research Requirements
+### Clean Architecture
 
-Before finalizing pattern choice:
-1. Search for "[Pattern] + [Tech Stack] implementation"
-2. Review official documentation for framework-specific guidance
-3. Look for case studies in similar domains
-4. Verify pattern fits the team's experience level
+```
+┌─────────────────────────────────────────────┐
+│              Frameworks & Drivers           │
+│   (Web, DB, External Interfaces)            │
+│  ┌───────────────────────────────────────┐  │
+│  │         Interface Adapters            │  │
+│  │   (Controllers, Presenters, Gateways) │  │
+│  │  ┌─────────────────────────────────┐  │  │
+│  │  │      Application Business       │  │  │
+│  │  │         (Use Cases)             │  │  │
+│  │  │  ┌───────────────────────────┐  │  │  │
+│  │  │  │   Enterprise Business     │  │  │  │
+│  │  │  │      (Entities)           │  │  │  │
+│  │  │  └───────────────────────────┘  │  │  │
+│  │  └─────────────────────────────────┘  │  │
+│  └───────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+
+Dependencies point INWARD only.
+```
+
+**When to Use:**
+- Complex business rules
+- Need extreme testability
+- Long-term maintainability critical
+- Large team
+
+**Pros:**
+- Highly testable
+- Independent of frameworks
+- Independent of UI
+- Independent of database
+
+**Cons:**
+- Significant boilerplate
+- Steep learning curve
+- Over-engineering risk
+
+---
+
+### Microservices
+
+```
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│  User    │  │  Order   │  │ Payment  │
+│ Service  │  │ Service  │  │ Service  │
+└────┬─────┘  └────┬─────┘  └────┬─────┘
+     │             │             │
+     └──────┬──────┴──────┬──────┘
+            │             │
+       ┌────▼────┐   ┌────▼────┐
+       │API GW   │   │Event Bus│
+       └─────────┘   └─────────┘
+```
+
+**When to Use:**
+- Large organization (10+ developers)
+- Independent deployments needed
+- Different scaling requirements
+- Polyglot technology requirements
+
+**Pros:**
+- Independent deployment
+- Technology flexibility
+- Team autonomy
+- Fault isolation
+
+**Cons:**
+- Network complexity
+- Distributed transactions
+- Operational overhead
+- Hard to debug
+
+**When NOT to Use:**
+- Small team
+- Simple application
+- Unclear domain boundaries
+- Limited DevOps capability
+
+---
+
+### Modular Monolith
+
+```
+┌────────────────────────────────────────┐
+│           Single Deployable            │
+│  ┌──────────┐ ┌──────────┐ ┌────────┐  │
+│  │  Users   │ │  Orders  │ │Payment │  │
+│  │  Module  │ │  Module  │ │ Module │  │
+│  │          │ │          │ │        │  │
+│  │ ┌──────┐ │ │ ┌──────┐ │ │┌──────┐│  │
+│  │ │Domain│ │ │ │Domain│ │ ││Domain││  │
+│  │ └──────┘ │ │ └──────┘ │ │└──────┘│  │
+│  │ ┌──────┐ │ │ ┌──────┐ │ │┌──────┐│  │
+│  │ │ API  │ │ │ │ API  │ │ ││ API  ││  │
+│  │ └──────┘ │ │ └──────┘ │ │└──────┘│  │
+│  └──────────┘ └──────────┘ └────────┘  │
+│                                        │
+│           Shared Infrastructure        │
+└────────────────────────────────────────┘
+```
+
+**When to Use:**
+- Growing application
+- Unclear if microservices needed
+- Want future flexibility
+- Medium team (3-10)
+
+**Pros:**
+- Simpler than microservices
+- Module boundaries enforced
+- Easy to extract to microservice later
+- Single deployment
+
+**Cons:**
+- Discipline needed to maintain boundaries
+- Shared database can cause issues
+- Not independently scalable
+
+---
+
+## Decision Flowchart
+
+```
+START
+  │
+  ▼
+Is the domain complex?
+  │
+  ├─ NO → Is it a simple CRUD app?
+  │         │
+  │         ├─ YES → MVC
+  │         └─ NO → Layered Architecture
+  │
+  └─ YES → Do you need independent deployments?
+            │
+            ├─ YES → Do you have 10+ developers?
+            │         │
+            │         ├─ YES → Microservices
+            │         └─ NO → Modular Monolith
+            │
+            └─ NO → Need to swap infrastructure easily?
+                     │
+                     ├─ YES → Hexagonal
+                     └─ NO → Clean Architecture
+```
+
+---
+
+## Research Before Deciding
+
+For each pattern considered:
+
+```markdown
+### Pattern Research: [Name]
+
+**Official Sources:**
+- [URL to authoritative source]
+
+**Pros for Our Project:**
+- [Specific benefit]
+
+**Cons for Our Project:**
+- [Specific drawback]
+
+**Team Familiarity:** Low | Medium | High
+
+**Verdict:** SUITABLE | NOT SUITABLE | NEEDS DISCUSSION
+```
+
+---
+
+## Integration with Framework Developer
+
+During Phase 2:
+1. Analyze project complexity
+2. Consider team size and experience
+3. Research pattern options
+4. Document decision as ADR
+5. Create module hierarchy based on pattern
+6. Update dependency graph

@@ -1,588 +1,522 @@
 ---
-name: blueprint-generation
-description: Create comprehensive project blueprints, documentation artifacts, and structured planning files. Use when asked about creating blueprints, generating documentation, project artifacts, planning files, phase outputs, or saving project state.
+description: Use this skill to create and maintain blueprint files across all 6 phases of framework development. Provides templates, naming conventions, and directory structure guidance.
 ---
 
-# Blueprint Generation Skill
+# Blueprint Generation for Framework Development
 
-This skill enables the framework-developer agent to create comprehensive, structured blueprint files at each phase of project planning. Blueprints serve as the persistent memory and documentation of all planning decisions.
+This skill provides templates and guidance for creating the comprehensive blueprint files that document project architecture, decisions, and implementation plans.
 
-## When to Use This Skill
+---
 
-Trigger this skill when the user asks about:
-- Creating blueprints or documentation
-- Saving project state
-- Generating phase outputs
-- Creating planning artifacts
-- Documenting architecture decisions
-- Setting up project structure
-- Resuming a previous planning session
+## Directory Structure
 
-## Blueprint Directory Structure
-
-All blueprints are stored in `.framework-blueprints/` at the project root:
+Initialize this structure at project start:
 
 ```
-project-name/
-└── .framework-blueprints/
-    ├── 00-project-state.json          # Current state, resume from here
-    ├── 01-discovery/
-    │   ├── outline-v1.md              # Initial high-level outline
-    │   ├── outline-detailed.md        # Expanded bullet points
-    │   ├── architecture-diagram.md    # Mermaid charts
-    │   └── decisions-log.md           # Decisions with sources
-    ├── 02-structure/
-    │   ├── module-hierarchy.md        # Complete module breakdown
-    │   ├── dependency-graph.md        # Module relationships
-    │   ├── risk-assessment.md         # Identified risks
-    │   └── verbal-links.md            # All connections explained
-    ├── 03-api-planning/
-    │   ├── api-contracts.md           # All endpoints, schemas
-    │   ├── call-signs.md              # Verified links between modules
-    │   └── coding-sequence.md         # Task order with dependencies
-    ├── 04-agent-assignment/
-    │   ├── work-division.md           # How work is split
-    │   ├── llm-capabilities.md        # Research on each LLM
-    │   ├── assignment-matrix.md       # Which LLM -> which tasks
-    │   └── prompts/
-    │       └── [agent-name].md        # Tailored prompts for each agent
-    ├── 05-execution/
-    │   ├── handoff-protocol.md        # Standard handoff format
-    │   ├── progress-tracker.md        # Status dashboard
-    │   ├── shared-context.md          # Context all agents need
-    │   └── handoffs/
-    │       └── handoff-NNN.md         # Individual handoff files
-    └── 06-integration/
-        ├── integration-checklist.md   # All verification checks
-        ├── conflict-resolution.md     # Conflicts and resolutions
-        ├── test-plan.md               # Integration tests
-        └── final-report.md            # Complete project blueprint
+.framework-blueprints/
+├── 00-project-state.json          # Master state file (source of truth)
+├── 01-discovery/
+│   ├── outline-v1.md              # Initial high-level outline
+│   ├── outline-detailed.md        # Expanded bullet points
+│   ├── architecture-diagram.md    # Mermaid diagrams
+│   └── decisions-log.md           # Decisions with sources
+├── 02-structure/
+│   ├── module-hierarchy.md        # Complete module breakdown
+│   ├── dependency-graph.md        # Module relationships
+│   ├── risk-assessment.md         # Identified risks
+│   └── verbal-links.md            # Connections in plain language
+├── 03-api-planning/
+│   ├── api-contracts.md           # All endpoints, schemas (SOURCE OF TRUTH)
+│   ├── call-signs.md              # Verified module connections
+│   └── coding-sequence.md         # Task order with dependencies
+├── 04-agent-assignment/
+│   ├── work-division.md           # How work is split
+│   ├── llm-capabilities.md        # Research on each LLM
+│   ├── assignment-matrix.md       # Which LLM → which tasks
+│   └── prompts/                   # Tailored prompts for each agent
+│       ├── backend-agent.md
+│       ├── frontend-agent.md
+│       └── qa-agent.md
+├── 05-execution/
+│   ├── handoff-protocol.md        # Standard handoff format
+│   ├── progress-tracker.md        # Status dashboard
+│   ├── shared-context.md          # Context all agents need
+│   ├── state-summary-phase-5.md   # 50% checkpoint summary
+│   └── handoffs/                  # Individual handoff files
+│       ├── HO-001-backend-to-frontend.md
+│       └── HO-002-frontend-to-qa.md
+└── 06-integration/
+    ├── integration-checklist.md   # All verification checks
+    ├── conflict-resolution.md     # Conflicts and resolutions
+    ├── test-plan.md               # Integration tests
+    └── final-report.md            # Complete project documentation
 ```
 
 ---
 
-## Phase-by-Phase Blueprint Creation
+## File Templates
 
-### Phase 1: Discovery
-
-**When to create:** After completing discovery discussions with user.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `outline-v1.md` | Initial high-level outline | After first understanding of project |
-| `outline-detailed.md` | Expanded with sub-points | After deeper discussion |
-| `architecture-diagram.md` | Visual representation | Before Phase 1 checkpoint |
-| `decisions-log.md` | All decisions with sources | Throughout Phase 1 |
-
-**outline-v1.md contents:**
-```markdown
-# Project Outline v1
-
-## Project Name
-[Name]
-
-## Problem Statement
-[What problem does this solve?]
-
-## Target Users
-[Who will use this?]
-
-## Core Modules
-1. [Module A] - [one-line purpose]
-2. [Module B] - [one-line purpose]
-...
-
-## Initial Relationships
-- Module A -> Module B: [relationship]
-```
-
-**outline-detailed.md contents:**
-```markdown
-# Detailed Project Outline
-
-## Module: [Name]
-
-### Purpose
-[Detailed explanation]
-
-### Sub-components
-- [Component 1]: [purpose]
-- [Component 2]: [purpose]
-
-### Data Handled
-- [Data type 1]
-- [Data type 2]
-
-### Dependencies
-- Requires: [other modules]
-- Provides: [to other modules]
-```
-
----
-
-### Phase 2: Structure
-
-**When to create:** After breaking down modules into detailed hierarchy.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `module-hierarchy.md` | Complete tree structure | After module breakdown |
-| `dependency-graph.md` | Mermaid dependency diagram | After relationships defined |
-| `risk-assessment.md` | Identified risks and mitigations | Before Phase 2 checkpoint |
-| `verbal-links.md` | Plain-language connections | Throughout Phase 2 |
-
-**module-hierarchy.md contents:**
-```markdown
-# Module Hierarchy
-
-## [Module A]
-├── [Sub-component A1]
-│   ├── [Function A1.1]
-│   └── [Function A1.2]
-└── [Sub-component A2]
-    └── [Function A2.1]
-
-## [Module B]
-...
-```
-
-**dependency-graph.md contents:**
-```markdown
-# Dependency Graph
-
-## Visual Representation
-
-\`\`\`mermaid
-graph TD
-    A[Module A] -->|uses| B[Module B]
-    A -->|reads| C[Module C]
-    B -->|writes| D[Database]
-\`\`\`
-
-## Dependency Matrix
-
-| Module | Depends On | Depended By |
-|--------|------------|-------------|
-| A | B, C | - |
-| B | D | A |
-```
-
----
-
-### Phase 3: API Planning
-
-**When to create:** After converting outlines to implementation-ready specifications.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `api-contracts.md` | All endpoints with schemas | After API design |
-| `call-signs.md` | Module-to-module communication | After verifying links |
-| `coding-sequence.md` | Implementation order | Before Phase 3 checkpoint |
-
-**api-contracts.md contents:**
-```markdown
-# API Contracts
-
-## Endpoint: [METHOD /path]
-
-### Request
-\`\`\`json
-{
-  "field": "type"
-}
-\`\`\`
-
-### Response
-\`\`\`json
-{
-  "field": "type"
-}
-\`\`\`
-
-### Errors
-| Code | Meaning |
-|------|---------|
-| 400 | [reason] |
-| 404 | [reason] |
-```
-
-**coding-sequence.md contents:**
-```markdown
-# Coding Sequence
-
-## Critical Path
-
-1. [Task 1] - [Module]
-   - Blocks: [Task 2, Task 3]
-   - Estimated: [time]
-
-2. [Task 2] - [Module]
-   - Depends on: [Task 1]
-   - Blocks: [Task 4]
-
-## Parallelizable Tasks
-
-- [Task A] and [Task B] can run concurrently
-```
-
----
-
-### Phase 4: Agent Assignment
-
-**When to create:** After determining LLM assignments for tasks.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `work-division.md` | How work is split | After task grouping |
-| `llm-capabilities.md` | Research findings on each LLM | After research |
-| `assignment-matrix.md` | Final assignments | After user confirmation |
-| `prompts/[agent].md` | Tailored prompts | For each assigned agent |
-
-**assignment-matrix.md contents:**
-```markdown
-# Assignment Matrix
-
-## Agent Assignments
-
-| Agent Name | LLM | Tasks | Reason |
-|------------|-----|-------|--------|
-| backend-api | Claude | Auth, API | Best for complex logic (source: [URL]) |
-| frontend-ui | GPT-4 | React UI | Strong at UI patterns (source: [URL]) |
-
-## Handoff Points
-
-| From Agent | To Agent | Trigger | Deliverable |
-|------------|----------|---------|-------------|
-| backend-api | frontend-ui | API complete | OpenAPI spec |
-```
-
----
-
-### Phase 5: Execution
-
-**When to create:** During active development coordination.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `handoff-protocol.md` | Standard handoff format | Before execution starts |
-| `progress-tracker.md` | Status dashboard | Updated continuously |
-| `shared-context.md` | Context all agents need | Before first task |
-| `handoffs/handoff-NNN.md` | Individual handoffs | At each transition |
-
-**progress-tracker.md contents:**
-```markdown
-# Progress Tracker
-
-## Dashboard
-
-| Agent | LLM | Status | Progress | Current Task | Blocker |
-|-------|-----|--------|----------|--------------|---------|
-| backend-api | Claude | Active | 60% | Auth module | None |
-| frontend-ui | GPT-4 | Waiting | 0% | - | API Ready |
-
-## Timeline
-
-- [Date]: [milestone reached]
-- [Date]: [milestone reached]
-
-## Blockers
-
-| ID | Description | Owner | Status |
-|----|-------------|-------|--------|
-| B1 | [blocker] | [agent] | Open |
-```
-
----
-
-### Phase 6: Integration
-
-**When to create:** When merging work from all agents.
-
-**Files to create:**
-
-| File | Purpose | When |
-|------|---------|------|
-| `integration-checklist.md` | Verification steps | Before integration |
-| `conflict-resolution.md` | Conflicts found and resolutions | During integration |
-| `test-plan.md` | Integration test cases | Before testing |
-| `final-report.md` | Complete project summary | After completion |
-
-**final-report.md contents:**
-```markdown
-# Final Project Report
-
-## Executive Summary
-[1-2 paragraph overview]
-
-## Architecture Overview
-[Mermaid diagram]
-
-## Modules Delivered
-| Module | Owner | Status | Tests |
-|--------|-------|--------|-------|
-| [name] | [agent] | Complete | Passing |
-
-## Decisions Log Summary
-[Key decisions with sources]
-
-## Known Issues
-[Any remaining issues]
-
-## Next Steps
-[Recommendations for future work]
-```
-
----
-
-## Project State File (00-project-state.json)
-
-This file tracks the current state and enables resumption:
+### 00-project-state.json
 
 ```json
 {
-  "version": "1.0",
-  "projectName": "My Project",
-  "currentPhase": 3,
-  "lastUpdated": "2025-01-15T10:30:00Z",
+  "projectName": "[Project Name]",
+  "version": "1.0.0",
+  "createdAt": "[ISO timestamp]",
+  "updatedAt": "[ISO timestamp]",
+  "currentPhase": 1,
   "phases": {
-    "1": {
-      "status": "complete",
-      "completedAt": "2025-01-14T15:00:00Z",
-      "artifacts": [
-        "01-discovery/outline-v1.md",
-        "01-discovery/outline-detailed.md",
-        "01-discovery/architecture-diagram.md",
-        "01-discovery/decisions-log.md"
-      ]
-    },
-    "2": {
-      "status": "complete",
-      "completedAt": "2025-01-15T09:00:00Z",
-      "artifacts": [
-        "02-structure/module-hierarchy.md",
-        "02-structure/dependency-graph.md",
-        "02-structure/risk-assessment.md",
-        "02-structure/verbal-links.md"
-      ]
-    },
-    "3": {
-      "status": "in_progress",
-      "startedAt": "2025-01-15T09:30:00Z",
-      "artifacts": [
-        "03-api-planning/api-contracts.md"
-      ]
-    },
-    "4": { "status": "pending" },
-    "5": { "status": "pending" },
-    "6": { "status": "pending" }
+    "1": { "status": "in_progress", "startedAt": "", "progress": 0 },
+    "2": { "status": "pending", "progress": 0 },
+    "3": { "status": "pending", "progress": 0 },
+    "4": { "status": "pending", "progress": 0 },
+    "5": { "status": "pending", "progress": 0 },
+    "6": { "status": "pending", "progress": 0 }
   },
-  "decisions": [
-    {
-      "id": "D001",
-      "phase": 1,
-      "decision": "Use PostgreSQL for database",
-      "reason": "Relational data with complex queries",
-      "source": "https://postgresql.org/docs",
-      "date": "2025-01-14"
-    }
-  ],
+  "decisions": [],
+  "modules": [],
   "agents": [],
-  "blockers": [],
-  "context": {
-    "projectVision": "...",
-    "targetUsers": "...",
-    "coreModules": []
+  "handoffs": [],
+  "risks": [],
+  "checkpoints": [],
+  "criticalDetails": {
+    "ports": {},
+    "envVars": [],
+    "nonStandardPaths": {},
+    "apiQuirks": []
   }
 }
 ```
 
 ---
 
-## Updating Project State
+### 01-discovery/outline-v1.md
 
-After EVERY significant action, update `00-project-state.json`:
+```markdown
+# Project Outline v1
 
-1. **Phase transition:**
-   ```json
-   {
-     "phases": {
-       "[N]": { "status": "complete", "completedAt": "[timestamp]" },
-       "[N+1]": { "status": "in_progress", "startedAt": "[timestamp]" }
-     }
-   }
-   ```
-
-2. **New artifact created:**
-   ```json
-   {
-     "phases": {
-       "[N]": {
-         "artifacts": ["...", "new-file.md"]
-       }
-     }
-   }
-   ```
-
-3. **Decision made:**
-   ```json
-   {
-     "decisions": [
-       "...",
-       {
-         "id": "DXXX",
-         "phase": N,
-         "decision": "...",
-         "reason": "...",
-         "source": "...",
-         "date": "..."
-       }
-     ]
-   }
-   ```
-
-4. **Blocker identified:**
-   ```json
-   {
-     "blockers": [
-       {
-         "id": "BXXX",
-         "description": "...",
-         "owner": "...",
-         "status": "open",
-         "identifiedAt": "..."
-       }
-     ]
-   }
-   ```
+**Project:** [Name]
+**Created:** [Date]
+**Status:** DRAFT | APPROVED
 
 ---
 
-## Format Guidelines
+## Vision Statement
 
-### Markdown Files
-
-1. **Headers:** Use ATX-style (`#`, `##`, `###`)
-2. **Lists:** Use `-` for unordered, `1.` for ordered
-3. **Code blocks:** Use triple backticks with language specifier
-4. **Tables:** Use GitHub-flavored markdown tables
-5. **Diagrams:** Use Mermaid syntax in fenced code blocks
-
-### Naming Conventions
-
-- Lowercase with hyphens: `api-contracts.md`
-- Numbered prefixes for phases: `01-discovery/`
-- Version suffixes when needed: `outline-v2.md`
-- Agent names in prompts: `prompts/backend-api.md`
-
-### Content Standards
-
-1. **Every decision must have a source URL**
-2. **Every API must have request/response examples**
-3. **Every module must have clear purpose statement**
-4. **Every risk must have mitigation strategy**
-5. **Every diagram must have text explanation**
+[One paragraph describing what this project does and why]
 
 ---
 
-## Initialization Command
+## Target Users
 
-When starting a new project, create the directory structure:
+| User Type | Description | Key Needs |
+|-----------|-------------|-----------|
+| Primary | [Description] | [Needs] |
+| Secondary | [Description] | [Needs] |
 
-```bash
-mkdir -p .framework-blueprints/{01-discovery,02-structure,03-api-planning,04-agent-assignment/prompts,05-execution/handoffs,06-integration}
+---
+
+## Core Modules
+
+### Module 1: [Name]
+**Purpose:** [What it does]
+**Responsibilities:**
+- [Responsibility 1]
+- [Responsibility 2]
+
+### Module 2: [Name]
+**Purpose:** [What it does]
+**Responsibilities:**
+- [Responsibility 1]
+- [Responsibility 2]
+
+---
+
+## Initial Relationships
+
+```mermaid
+graph TD
+    A[Module 1] --> B[Module 2]
+    B --> C[Module 3]
 ```
 
-Then initialize `00-project-state.json` with:
+---
 
+## Open Questions
+- [ ] [Question 1]
+- [ ] [Question 2]
+
+---
+
+## Approval
+
+- [ ] User approved this outline on [date]
+```
+
+---
+
+### 01-discovery/decisions-log.md
+
+```markdown
+# Decisions Log
+
+All architectural and technical decisions with sources.
+
+---
+
+## Decision Template
+
+### D001: [Decision Title]
+
+**Date:** [ISO date]
+**Phase:** 1
+**Category:** Technology | Architecture | Process
+
+**Context:**
+[Why was this decision needed?]
+
+**Options Considered:**
+1. **[Option A]**
+   - Pros: [list]
+   - Cons: [list]
+   - Source: [URL]
+
+2. **[Option B]**
+   - Pros: [list]
+   - Cons: [list]
+   - Source: [URL]
+
+**Decision:**
+[What was decided]
+
+**Rationale:**
+[Why this option was chosen]
+
+**Consequences:**
+- [Impact 1]
+- [Impact 2]
+
+---
+
+## Decisions Index
+
+| ID | Date | Title | Category |
+|----|------|-------|----------|
+| D001 | 2025-01-03 | Database Selection | Technology |
+| D002 | 2025-01-03 | API Framework | Technology |
+```
+
+---
+
+### 03-api-planning/api-contracts.md
+
+```markdown
+# API Contracts
+
+> ⚠️ **THIS FILE IS THE SOURCE OF TRUTH**
+> Before implementing or calling any endpoint, read this file.
+> Do not guess endpoints. Do not assume paths.
+
+---
+
+## Base Configuration
+
+- **Base URL:** `/api/v1`
+- **Auth:** Bearer token in `Authorization` header
+- **Content-Type:** `application/json`
+- **All dates:** ISO 8601 UTC
+
+---
+
+## Endpoints Index
+
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | /users | List all users | ⏳ Pending |
+| POST | /users | Create user | ⏳ Pending |
+| GET | /users/:id | Get user by ID | ⏳ Pending |
+
+**Status Legend:** ⏳ Pending | 🔄 In Progress | ✅ Implemented
+
+---
+
+## Endpoint Details
+
+### GET /users
+
+**Description:** List all users with pagination
+
+**Authentication:** Required
+
+**Query Parameters:**
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| page | integer | No | 1 | Page number |
+| limit | integer | No | 20 | Items per page |
+
+**Response 200:**
 ```json
 {
-  "version": "1.0",
-  "projectName": "",
-  "currentPhase": 1,
-  "lastUpdated": "",
-  "phases": {
-    "1": { "status": "in_progress", "startedAt": "", "artifacts": [] },
-    "2": { "status": "pending", "artifacts": [] },
-    "3": { "status": "pending", "artifacts": [] },
-    "4": { "status": "pending", "artifacts": [] },
-    "5": { "status": "pending", "artifacts": [] },
-    "6": { "status": "pending", "artifacts": [] }
-  },
-  "decisions": [],
-  "agents": [],
-  "blockers": [],
-  "context": {}
+  "data": [
+    {
+      "id": "uuid",
+      "email": "string",
+      "name": "string",
+      "createdAt": "ISO8601"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 100
+  }
 }
 ```
 
+**Error Responses:**
+- 401: Unauthorized
+- 429: Rate limited
+
 ---
-
-## Resume Protocol
-
-When user asks to resume a project:
-
-1. Read `00-project-state.json`
-2. Identify `currentPhase`
-3. List completed artifacts
-4. Show pending items
-5. Ask user where to continue
-
-Example:
-```
-Project: My Project
-Current Phase: 3 (API Planning)
-
-Completed:
-- Phase 1: Discovery (4 artifacts)
-- Phase 2: Structure (4 artifacts)
-
-In Progress:
-- api-contracts.md (partial)
-
-Where would you like to continue?
-1. Continue API planning
-2. Review previous phases
-3. See full artifact list
 ```
 
 ---
 
-## Integration with Framework Developer Workflow
+### 05-execution/progress-tracker.md
 
-This skill integrates with the 6-phase workflow:
+```markdown
+# Execution Progress Tracker
 
-| Phase | Skill Action |
-|-------|--------------|
-| 1. Discovery | Create outline and decisions files |
-| 2. Structure | Create hierarchy and dependency files |
-| 3. Planning | Create API contracts and sequence |
-| 4. Agents | Create assignment matrix and prompts |
-| 5. Execution | Maintain tracker and handoffs |
-| 6. Integration | Create checklist and final report |
+**Last Updated:** [timestamp]
 
-At each phase checkpoint, prompt:
-```
-Phase [N] complete. Save blueprints now?
-[Y] Save all artifacts
-[N] Continue without saving
-[R] Review before saving
+---
+
+## Agent Status Dashboard
+
+| Agent | LLM | Status | Progress | Current Task | Blocker |
+|-------|-----|--------|----------|--------------|---------|
+| BE-01 | Claude Sonnet | 🟢 Active | 60% | User API | None |
+| FE-01 | GPT-4o | 🟡 Waiting | 0% | - | API Ready |
+| QA-01 | DeepSeek | ⚪ Pending | 0% | - | FE Ready |
+
+**Status Legend:** 🟢 Active | 🟡 Waiting | 🔴 Blocked | ⚪ Pending | ✅ Complete
+
+---
+
+## Task Progress
+
+### Phase 5 Tasks
+
+| ID | Task | Agent | Status | Started | Completed |
+|----|------|-------|--------|---------|-----------|
+| T-001 | Auth module | BE-01 | ✅ | 10:00 | 11:30 |
+| T-002 | User CRUD | BE-01 | 🔄 | 11:45 | - |
+| T-003 | Login UI | FE-01 | ⏳ | - | - |
+
+---
+
+## Handoff Status
+
+| ID | From | To | Status | Notes |
+|----|------|-----|--------|-------|
+| HO-001 | BE-01 | FE-01 | Pending | Waiting on T-002 |
+
+---
+
+## Blockers
+
+| Blocker | Blocking | Since | Resolution |
+|---------|----------|-------|------------|
+| API not ready | FE-01 | 11:00 | ETA 14:00 |
+
+---
+
+## Metrics
+
+- Tasks completed: 1 / 10
+- Estimated completion: 18:00
+- Blockers resolved: 0 / 1
 ```
 
 ---
 
-## Template Location
+### 06-integration/final-report.md
 
-Templates for common files are available in:
-`skills/blueprint-generation/templates/`
+```markdown
+# Final Project Report
 
-Use these as starting points and customize for each project.
+**Project:** [Name]
+**Generated:** [Date]
+**Version:** 1.0.0
+
+---
+
+## Executive Summary
+
+[Brief overview of the project and what was built]
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TD
+    subgraph Frontend
+        A[React App]
+    end
+    subgraph Backend
+        B[API Server]
+        C[Auth Service]
+    end
+    subgraph Data
+        D[(PostgreSQL)]
+        E[(Redis)]
+    end
+    A --> B
+    B --> C
+    B --> D
+    B --> E
+```
+
+---
+
+## Modules Delivered
+
+| Module | Description | Status | Files |
+|--------|-------------|--------|-------|
+| Auth | JWT authentication | ✅ Complete | 12 |
+| Users | User management | ✅ Complete | 8 |
+| API | REST endpoints | ✅ Complete | 15 |
+
+---
+
+## API Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/v1/auth/login | POST | User login |
+| /api/v1/users | GET | List users |
+| /api/v1/users | POST | Create user |
+
+Full details: `03-api-planning/api-contracts.md`
+
+---
+
+## Key Decisions
+
+| ID | Decision | Rationale |
+|----|----------|-----------|
+| D001 | PostgreSQL | Relational data, strong consistency |
+| D002 | JWT auth | Stateless, scalable |
+
+Full details: `01-discovery/decisions-log.md`
+
+---
+
+## Deployment
+
+### Environment Variables
+| Variable | Description | Required |
+|----------|-------------|----------|
+| DATABASE_URL | PostgreSQL connection | Yes |
+| JWT_SECRET | Token signing key | Yes |
+| REDIS_URL | Cache connection | No |
+
+### Commands
+```bash
+npm install
+npm run build
+npm start
+```
+
+---
+
+## Next Steps
+
+1. [ ] Deploy to staging
+2. [ ] Load testing
+3. [ ] Security audit
+4. [ ] Production deployment
+
+---
+
+## Team
+
+| Agent | LLM | Contribution |
+|-------|-----|--------------|
+| BE-01 | Claude Sonnet 4 | Backend API |
+| FE-01 | GPT-4o | Frontend UI |
+```
+
+---
+
+## Naming Conventions
+
+### Files
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Outline | `outline-v{N}.md` | `outline-v1.md` |
+| State summary | `state-summary-phase-{N}.md` | `state-summary-phase-5.md` |
+| Handoff | `HO-{NNN}-{from}-to-{to}.md` | `HO-001-backend-to-frontend.md` |
+| Agent prompt | `{role}-agent.md` | `backend-agent.md` |
+
+### IDs
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Decision | `D{NNN}` | `D001` |
+| Handoff | `HO-{NNN}` | `HO-001` |
+| Risk | `R{NNN}` | `R001` |
+| Task | `T-{NNN}` | `T-001` |
+
+---
+
+## Mermaid Diagram Patterns
+
+### Module Relationships
+```mermaid
+graph TD
+    A[Module A] --> B[Module B]
+    A --> C[Module C]
+    B --> D[(Database)]
+```
+
+### Data Flow
+```mermaid
+flowchart LR
+    User --> |Request| API
+    API --> |Query| DB[(Database)]
+    DB --> |Data| API
+    API --> |Response| User
+```
+
+### Sequence
+```mermaid
+sequenceDiagram
+    Client->>API: POST /login
+    API->>Auth: Validate
+    Auth-->>API: Token
+    API-->>Client: 200 OK
+```
+
+---
+
+## Quick Reference
+
+### Creating Blueprints
+1. Initialize directory structure
+2. Create `00-project-state.json`
+3. Add phase directories as needed
+4. Use templates for each file type
+
+### Updating Blueprints
+1. Read current state first
+2. Modify only what changed
+3. Update timestamps
+4. Verify links still work
+
+### Phase Transitions
+1. Complete all phase files
+2. Update state to next phase
+3. Create checkpoint if at 50%/100%

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ankur-plugins",
+  "version": "1.0.0",
+  "description": "Ankur's Claude Code Plugins - Development tools and orchestrators",
+  "owner": {
+    "name": "Ankur Jain",
+    "email": "ankurjain1121@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "framework-dev",
+      "source": "./plugins/framework-dev",
+      "description": "Project architecture orchestrator that helps finalize frameworks for new projects through structured discussion, research-backed recommendations, and multi-agent coordination.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ankur Jain"
+      },
+      "category": "development"
+    }
+  ]
+}

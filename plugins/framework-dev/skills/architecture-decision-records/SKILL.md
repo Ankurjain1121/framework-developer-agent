@@ -1,339 +1,313 @@
 ---
-description: Use this skill when the user asks about "ADR", "architecture decision record", "documenting decisions", "decision log", "why did we choose", "technical decisions", "recording rationale", or needs to document framework-level choices made during any phase of the planning process.
+description: Use this skill when documenting architectural decisions during framework planning. Provides ADR templates, numbering schemes, and integration with the decisions log.
 ---
 
-# Architecture Decision Records for Framework Development
+# Architecture Decision Records (ADRs)
 
-This skill provides templates and guidance for documenting architectural decisions made during framework planning. ADRs capture the context, decision, and consequences of significant technical choices.
+This skill provides guidance on documenting architectural decisions using the ADR format, ensuring all significant choices are recorded with context, rationale, and consequences.
 
-## When to Write an ADR
+---
 
-Create an ADR when:
-- Choosing between technology options (database, framework, language)
-- Selecting an architecture pattern (Clean, Hexagonal, DDD)
-- Defining API design approach (REST vs GraphQL)
-- Making deployment decisions (monolith vs microservices)
-- Establishing coding standards that affect structure
-- Any decision that would be hard to reverse
+## What is an ADR?
 
-## ADR Template for Framework Development
+An Architecture Decision Record captures:
+- **Context**: Why was this decision needed?
+- **Decision**: What was decided?
+- **Consequences**: What are the implications?
+
+ADRs create a decision history that:
+- Explains why the system is the way it is
+- Helps new team members understand choices
+- Prevents revisiting already-decided topics
+- Provides audit trail for compliance
+
+---
+
+## ADR Template
 
 ```markdown
-# ADR-[NUMBER]: [TITLE]
+# ADR-{NNN}: {Title}
 
-## Status
-[Proposed | Accepted | Deprecated | Superseded by ADR-XXX]
+**Date:** {YYYY-MM-DD}
+**Status:** PROPOSED | ACCEPTED | DEPRECATED | SUPERSEDED
+**Deciders:** {Who made this decision}
 
 ## Context
-What is the issue that we're seeing that motivates this decision?
-- Current situation
-- Problem statement
-- Constraints we're operating under
-- Framework phase this relates to
 
-## Decision Drivers
-- [Driver 1: e.g., Team expertise]
-- [Driver 2: e.g., Time to market]
-- [Driver 3: e.g., Scalability requirements]
-- [Driver 4: e.g., Budget constraints]
-
-## Considered Options
-1. [Option 1]
-2. [Option 2]
-3. [Option 3]
+{Describe the situation that requires a decision. What is the problem?
+What forces are at play? What constraints exist?}
 
 ## Decision
-We will use [OPTION] because [REASONING].
+
+{State the decision clearly. Use active voice: "We will..."}
+
+## Alternatives Considered
+
+### Alternative 1: {Name}
+- **Description:** {What is this option?}
+- **Pros:**
+  - {Pro 1}
+  - {Pro 2}
+- **Cons:**
+  - {Con 1}
+  - {Con 2}
+- **Source:** {URL to official documentation}
+
+### Alternative 2: {Name}
+- **Description:** {What is this option?}
+- **Pros:**
+  - {Pro 1}
+- **Cons:**
+  - {Con 1}
+- **Source:** {URL}
+
+## Rationale
+
+{Why was this option chosen over others? What tipped the balance?}
 
 ## Consequences
 
 ### Positive
-- [Benefit 1]
-- [Benefit 2]
+- {Positive consequence 1}
+- {Positive consequence 2}
 
 ### Negative
-- [Drawback 1]
-- [Drawback 2]
+- {Negative consequence 1}
+- {Trade-off accepted}
 
 ### Neutral
-- [Side effect that's neither good nor bad]
-
-## Research Sources
-- [URL 1]: [What it confirmed]
-- [URL 2]: [What it confirmed]
+- {Other implications}
 
 ## Related Decisions
-- ADR-XXX: [Related decision title]
-- Blueprint file: [path/to/blueprint.md]
+- ADR-{NNN}: {Related decision}
 
-## Phase Connection
-This decision was made during Phase [N] and affects:
-- Phase [X]: [How it affects that phase]
-- Phase [Y]: [How it affects that phase]
+## References
+- {URL 1}
+- {URL 2}
 ```
 
-## Framework-Specific ADR Examples
-
-### Example 1: Technology Stack Decision (Phase 1)
-
-```markdown
-# ADR-001: Backend Framework Selection
-
-## Status
-Accepted
-
-## Context
-We are building an offline-first task management application. The backend
-needs to handle:
-- Real-time sync with conflict resolution
-- Multi-tenant data isolation
-- RESTful API for mobile and web clients
-- WebSocket support for live updates
-
-Team has 3 developers with Node.js and Python experience.
-
-## Decision Drivers
-- Real-time capability requirement
-- Team's existing expertise
-- Ecosystem for offline-sync libraries
-- Time to MVP (3 months)
-
-## Considered Options
-1. Node.js with Express + Socket.io
-2. Python with FastAPI + WebSockets
-3. Go with Gin + Gorilla WebSocket
-4. Elixir with Phoenix LiveView
-
-## Decision
-We will use **Node.js with Express + Socket.io** because:
-- Team has strongest Node.js experience (reduces ramp-up)
-- Socket.io handles WebSocket fallbacks automatically
-- Rich npm ecosystem for sync libraries (y-js, automerge)
-- Shared language with React Native mobile app
-
-## Consequences
-
-### Positive
-- Fast development start (no learning curve)
-- Code sharing potential between backend and mobile
-- Large talent pool for future hires
-
-### Negative
-- Single-threaded limitations for CPU-intensive tasks
-- Need to be careful with callback hell / promise chains
-- Less type safety than Go or typed Python
-
-### Neutral
-- Will need to implement clustering for horizontal scale
-
-## Research Sources
-- https://socket.io/docs/: Confirmed automatic fallback support
-- https://nodejs.org/en/about/: Event-driven architecture fits our use case
-- https://automerge.org/: CRDT library available for Node.js
-
-## Phase Connection
-- Phase 2: Module structure will follow Express router patterns
-- Phase 3: API design will use Express middleware conventions
-- Phase 4: Frontend agent can share TypeScript types with backend
-```
-
-### Example 2: Architecture Pattern Decision (Phase 2)
-
-```markdown
-# ADR-002: Hexagonal Architecture for Core Module
-
-## Status
-Accepted
-
-## Context
-The task management core needs to:
-- Connect to PostgreSQL for persistence
-- Send notifications via email, push, and SMS
-- Integrate with calendar services (Google, Outlook)
-- Support future integrations we can't predict
-
-Different teams will work on core logic vs integrations.
-
-## Decision Drivers
-- Need to isolate core from integration complexity
-- Multiple external service dependencies
-- Requirement to swap notification providers
-- Testing core logic without real services
-
-## Considered Options
-1. Traditional layered architecture
-2. Clean Architecture
-3. Hexagonal Architecture (Ports and Adapters)
-
-## Decision
-We will use **Hexagonal Architecture** because:
-- Explicit ports define clear team boundaries
-- Adapters can be developed and tested independently
-- Easy to add new integrations without touching core
-- Natural fit for our multi-agent development approach
-
-## Consequences
-
-### Positive
-- Clear boundaries for Phase 4 agent assignment
-- Each adapter can be a separate task for different LLMs
-- Core logic fully testable with mock adapters
-
-### Negative
-- More interfaces to define upfront
-- Overhead for simple CRUD operations
-- Team needs to understand port/adapter concepts
-
-## Phase Connection
-- Phase 3: Each port becomes an API contract specification
-- Phase 4: Core agent works on domain, adapter agents work on integrations
-- Phase 5: Adapters can be developed in parallel, core must finish first
-```
-
-### Example 3: API Design Decision (Phase 3)
-
-```markdown
-# ADR-003: REST with JSON:API Specification
-
-## Status
-Accepted
-
-## Context
-Need to design API contracts for:
-- Mobile app (React Native)
-- Web app (React)
-- Future third-party integrations
-- Webhook callbacks
-
-Considering standardized formats for consistency.
-
-## Decision Drivers
-- Consistency across all endpoints
-- Client library generation support
-- Pagination and filtering standards
-- Error handling conventions
-
-## Considered Options
-1. Custom REST conventions
-2. JSON:API specification
-3. GraphQL
-4. gRPC with REST gateway
-
-## Decision
-We will use **JSON:API specification** because:
-- Standardized pagination, filtering, and sparse fieldsets
-- OpenAPI generators support JSON:API
-- Reduces bikeshedding on response formats
-- Good fit for resource-oriented task management domain
-
-## Consequences
-
-### Positive
-- Consistent API structure from day one
-- Client libraries can be generated
-- Well-documented specification to reference
-
-### Negative
-- Verbose responses compared to custom REST
-- Learning curve for developers new to JSON:API
-- Some flexibility sacrificed for consistency
-
-## Research Sources
-- https://jsonapi.org/: Full specification reference
-- https://openapi-generator.tech/: Confirmed JSON:API support
-
-## Phase Connection
-- Phase 3: All endpoint definitions follow JSON:API structure
-- Phase 4: API specification serves as contract between agents
-- Phase 6: Integration testing validates JSON:API compliance
-```
-
-## ADR File Organization
-
-Store ADRs alongside blueprint files:
-
-```
-project-root/
-  docs/
-    architecture/
-      decisions/
-        ADR-001-backend-framework.md
-        ADR-002-hexagonal-architecture.md
-        ADR-003-api-specification.md
-        ADR-004-database-selection.md
-      blueprints/
-        module-overview.md
-        api-contracts.md
-        deployment-strategy.md
-```
-
-## ADR Numbering Convention
-
-- **ADR-0XX:** Foundation decisions (stack, patterns, standards)
-- **ADR-1XX:** Backend architecture decisions
-- **ADR-2XX:** Frontend architecture decisions
-- **ADR-3XX:** Infrastructure and deployment decisions
-- **ADR-4XX:** Security and compliance decisions
-- **ADR-5XX:** Integration and API decisions
+---
 
 ## ADR Lifecycle
 
-```mermaid
-stateDiagram-v2
-    [*] --> Proposed
-    Proposed --> Accepted: Team agrees
-    Proposed --> Rejected: Better option found
-    Accepted --> Deprecated: No longer relevant
-    Accepted --> Superseded: New ADR replaces
-    Deprecated --> [*]
-    Superseded --> [*]
-    Rejected --> [*]
+```
+PROPOSED → ACCEPTED → [DEPRECATED | SUPERSEDED]
+    ↓          ↓              ↓
+ Rejected   In effect    Replaced by new ADR
 ```
 
-## Connecting ADRs to Framework Phases
+### Status Definitions
 
-| Phase | ADR Focus |
-|-------|-----------|
-| Phase 1: Discovery | Technology stack, high-level patterns |
-| Phase 2: Structure | Module boundaries, architecture patterns |
-| Phase 3: Planning | API design, data models, coding standards |
-| Phase 4: Agents | Agent capabilities, task boundaries |
-| Phase 5: Execution | Handoff protocols, integration points |
-| Phase 6: Integration | Conflict resolution, final standards |
+| Status | Meaning |
+|--------|---------|
+| PROPOSED | Under discussion, not yet decided |
+| ACCEPTED | Decision made, in effect |
+| DEPRECATED | No longer relevant (system changed) |
+| SUPERSEDED | Replaced by a newer ADR |
+
+---
+
+## Numbering Scheme
+
+```
+ADR-{Category}{Sequence}
+
+Categories:
+  0XX - Project Setup (tooling, CI/CD)
+  1XX - Architecture (patterns, structure)
+  2XX - Technology (frameworks, libraries)
+  3XX - Data (database, storage)
+  4XX - Security (auth, encryption)
+  5XX - Integration (APIs, third-party)
+  6XX - Operations (deployment, monitoring)
+
+Examples:
+  ADR-001 - Use TypeScript
+  ADR-101 - Adopt Hexagonal Architecture
+  ADR-201 - Choose React for Frontend
+  ADR-301 - Use PostgreSQL for Primary Database
+  ADR-401 - Implement JWT Authentication
+```
+
+---
+
+## When to Write an ADR
+
+Write an ADR when:
+
+| Scenario | Example |
+|----------|---------|
+| Choosing technology | Database, framework, library |
+| Architecture pattern | Microservices vs monolith |
+| Significant trade-off | Performance vs maintainability |
+| Breaking change | Major API redesign |
+| Security decision | Authentication method |
+| Reversing previous decision | Changing database |
+
+Don't write ADRs for:
+- Trivial choices (variable naming)
+- Temporary solutions (hotfixes)
+- Already-standard practices
+
+---
+
+## ADR Examples
+
+### ADR-301: Use PostgreSQL for Primary Database
+
+**Date:** 2025-01-03
+**Status:** ACCEPTED
+**Deciders:** Framework Orchestrator, User
+
+## Context
+
+The application needs a primary database for storing user data, tasks, and relationships. The data is highly relational with complex queries needed. Expected scale is 100K users initially, growing to 1M.
+
+## Decision
+
+We will use PostgreSQL as the primary database.
+
+## Alternatives Considered
+
+### Alternative 1: PostgreSQL
+- **Description:** Open-source relational database
+- **Pros:**
+  - Excellent for relational data
+  - Strong ACID compliance
+  - Mature ecosystem
+  - JSON support for flexibility
+- **Cons:**
+  - Requires schema management
+  - Horizontal scaling more complex
+- **Source:** https://www.postgresql.org/docs/current/intro-whatis.html
+
+### Alternative 2: MongoDB
+- **Description:** Document-oriented NoSQL database
+- **Pros:**
+  - Flexible schema
+  - Easy horizontal scaling
+  - Good for unstructured data
+- **Cons:**
+  - Weaker for relational data
+  - ACID only at document level
+  - Query complexity for joins
+- **Source:** https://www.mongodb.com/docs/
+
+## Rationale
+
+Our data model is inherently relational (users have tasks, tasks have subtasks, etc.). PostgreSQL's strong ACID compliance and mature tooling outweigh MongoDB's flexibility benefits for this use case. The JSON column type provides flexibility where needed.
+
+## Consequences
+
+### Positive
+- Strong data integrity
+- Complex queries are efficient
+- Well-understood by developers
+
+### Negative
+- Need to manage migrations
+- More upfront schema design required
+
+### Neutral
+- Will use Prisma ORM for type-safe access
+
+## References
+- https://www.postgresql.org/docs/
+- https://www.prisma.io/docs/
+
+---
+
+## Integration with Framework Developer
+
+### During Phase 1 (Discovery)
+
+Record decisions about:
+- Target platform
+- Core technology choices
+- Development approach
+
+### During Phase 2 (Structure)
+
+Record decisions about:
+- Architecture pattern
+- Module boundaries
+- Key abstractions
+
+### During Phase 3 (Planning)
+
+Record decisions about:
+- API design approach
+- Data models
+- Security strategy
+
+### Storage Location
+
+All ADRs go in: `.framework-blueprints/01-discovery/decisions-log.md`
+
+Or as individual files:
+```
+.framework-blueprints/
+└── decisions/
+    ├── ADR-001-typescript.md
+    ├── ADR-101-hexagonal-architecture.md
+    └── ADR-301-postgresql.md
+```
+
+---
+
+## Quick ADR Template
+
+For rapid documentation during sessions:
+
+```markdown
+### D{NNN}: {Title}
+
+**Chose:** {Option}
+**Over:** {Rejected options}
+**Because:** {One-line rationale}
+**Source:** {URL}
+**Trade-off:** {What we accept}
+```
+
+---
 
 ## ADR Review Checklist
 
 Before finalizing an ADR:
 
 - [ ] Context clearly explains the problem
-- [ ] At least 2-3 options were considered
-- [ ] Decision includes explicit reasoning
-- [ ] Both positive and negative consequences listed
-- [ ] Research sources with URLs included
-- [ ] Related ADRs and blueprint files linked
-- [ ] Phase connections documented
-- [ ] Status is set correctly
+- [ ] All reasonable alternatives listed
+- [ ] Each alternative has pros/cons
+- [ ] Sources are cited
+- [ ] Decision is clearly stated
+- [ ] Rationale explains why
+- [ ] Consequences are realistic
+- [ ] Related ADRs are linked
 
-## Quick ADR for Minor Decisions
+---
 
-For smaller decisions, use a lightweight format:
+## Updating ADRs
+
+### Superseding a Decision
+
+When a decision needs to change:
+
+1. Create new ADR with new decision
+2. Update old ADR status to SUPERSEDED
+3. Add link to new ADR
 
 ```markdown
-# ADR-0XX: [Title]
-
-**Status:** Accepted
-**Date:** YYYY-MM-DD
-**Context:** [One paragraph]
-**Decision:** We will [choice] because [reason].
-**Consequences:** [Bullet points]
+**Status:** SUPERSEDED by ADR-302
 ```
 
-## Generating ADRs During Planning
+### Deprecating a Decision
 
-When the Framework Developer Orchestrator makes a recommendation:
+When a decision is no longer relevant:
 
-1. Document the research performed (search queries, sources)
-2. Record the options presented to the user
-3. Capture the user's decision and reasoning
-4. Auto-generate an ADR draft for review
-5. Link to the relevant phase checkpoint
+1. Update status to DEPRECATED
+2. Add note explaining why
+
+```markdown
+**Status:** DEPRECATED
+**Note:** Feature was removed in v2.0
+```

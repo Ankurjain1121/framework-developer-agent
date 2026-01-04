@@ -6,13 +6,44 @@ description: Use this skill when the user asks about "API design", "REST API", "
 
 This skill provides guidance on designing APIs during Phase 3 (Planning) of framework development. It covers contract-first design, REST and GraphQL patterns, and how to create specifications that enable multi-agent development.
 
+---
+
+## CRITICAL: API Contracts are the Source of Truth
+
+**The `03-api-planning/api-contracts.md` file is the SINGLE SOURCE OF TRUTH for all API endpoints.**
+
+### Contract Guards (Prevents Wrong Endpoints)
+
+Before implementing ANY endpoint:
+1. **READ** `api-contracts.md` to get the exact specification
+2. **MATCH** your implementation exactly (method, path, schema)
+3. **NEVER** guess or assume an endpoint structure
+
+Before calling ANY endpoint:
+1. **READ** `api-contracts.md` to get the correct path
+2. **USE** the exact path specified (no variations)
+3. **VALIDATE** request/response against the schema
+
+### Why This Matters
+
+In long Claude Code sessions, context drift causes:
+- "Guessing" endpoints that don't exist
+- Using `/api/user` when contract says `/api/users`
+- Missing required fields in requests
+- Wrong HTTP methods (POST vs PUT)
+
+**The fix: Always read the contract before writing code.**
+
+---
+
 ## Contract-First Design
 
-Define API contracts before implementation. This enables:
+Define API contracts BEFORE implementation. This enables:
 - Parallel development (frontend and backend work simultaneously)
 - Clear boundaries for agent assignment (Phase 4)
 - Automated testing against contracts
 - Client SDK generation
+- **Prevention of context drift errors**
 
 ```mermaid
 flowchart LR
@@ -21,6 +52,117 @@ flowchart LR
     Contract --> Tests[Contract Tests]
     Contract --> SDK[Generated SDKs]
 ```
+
+---
+
+## API Contract File Format
+
+Create `03-api-planning/api-contracts.md` with this structure:
+
+```markdown
+# API Contracts
+
+> ⚠️ **THIS FILE IS THE SOURCE OF TRUTH**
+> Before implementing or calling any endpoint, read this file.
+> Do not guess endpoints. Do not assume paths.
+
+## Base Configuration
+- Base URL: `/api/v1`
+- Auth: Bearer token in `Authorization` header
+- Content-Type: `application/json`
+- All dates: ISO 8601 UTC
+
+## Endpoints Index
+
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | /users | List all users | ✅ Implemented |
+| POST | /users | Create user | ✅ Implemented |
+| GET | /users/:id | Get user by ID | 🔄 In Progress |
+| PUT | /users/:id | Update user | ⏳ Pending |
+| DELETE | /users/:id | Delete user | ⏳ Pending |
+
+---
+
+## Endpoint Details
+
+### GET /users
+
+**Description:** List all users with pagination
+
+**Authentication:** Required
+
+**Query Parameters:**
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| page | integer | No | 1 | Page number |
+| limit | integer | No | 20 | Items per page (max 100) |
+| sort | string | No | createdAt | Sort field |
+| order | string | No | desc | Sort direction (asc/desc) |
+
+**Response 200:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "email": "string",
+      "name": "string",
+      "createdAt": "ISO8601",
+      "updatedAt": "ISO8601"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5
+  }
+}
+```
+
+**Response 401:** Unauthorized
+**Response 429:** Rate limited
+
+---
+
+### POST /users
+
+**Description:** Create a new user
+
+**Authentication:** Required (admin only)
+
+**Request Body:**
+```json
+{
+  "email": "string (required, valid email)",
+  "name": "string (required, 2-100 chars)",
+  "password": "string (required, min 8 chars)",
+  "role": "string (optional, default: 'user', enum: ['user', 'admin'])"
+}
+```
+
+**Response 201:** ← NOTE: 201, not 200
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "string",
+    "name": "string",
+    "role": "string",
+    "createdAt": "ISO8601"
+  }
+}
+```
+
+**Response 400:** Validation error
+**Response 401:** Unauthorized
+**Response 409:** Email already exists
+
+---
+```
+
+---
 
 ## REST API Design Principles
 
@@ -78,9 +220,11 @@ Conventions:
   - Include: ?include=assignee,project (related resources)
 ```
 
-### Response Structure
+---
 
-Consistent response envelope:
+## Response Structure Standards
+
+### Success Response Envelope
 
 ```json
 {
@@ -89,26 +233,28 @@ Consistent response envelope:
     "type": "task",
     "attributes": {
       "title": "Implement login",
-      "status": "active",
-      "priority": "high"
-    },
-    "relationships": {
-      "assignee": {
-        "data": { "type": "user", "id": "user-456" }
-      }
+      "status": "active"
     }
   },
-  "included": [
-    {
-      "type": "user",
-      "id": "user-456",
-      "attributes": { "name": "John Doe" }
-    }
+  "meta": {
+    "requestId": "uuid"
+  }
+}
+```
+
+### List Response Envelope
+
+```json
+{
+  "data": [
+    { "id": "1", "name": "Item 1" },
+    { "id": "2", "name": "Item 2" }
   ],
   "meta": {
-    "totalCount": 150,
     "page": 1,
-    "limit": 20
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5
   }
 }
 ```
@@ -117,21 +263,23 @@ Consistent response envelope:
 
 ```json
 {
-  "errors": [
-    {
-      "status": "422",
-      "code": "VALIDATION_ERROR",
-      "title": "Invalid attribute",
-      "detail": "Title must be at least 3 characters",
-      "source": {
-        "pointer": "/data/attributes/title"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request",
+    "details": [
+      {
+        "field": "email",
+        "message": "Must be a valid email address"
       }
-    }
-  ]
+    ],
+    "requestId": "uuid"
+  }
 }
 ```
 
-### HTTP Status Codes
+---
+
+## HTTP Status Codes
 
 | Code | Meaning | When to Use |
 |------|---------|-------------|
@@ -147,209 +295,49 @@ Consistent response envelope:
 | 429 | Too Many Requests | Rate limit exceeded |
 | 500 | Internal Server Error | Server-side failure |
 
-## GraphQL Design Principles
+**⚠️ Important:** Document the EXACT status code for each endpoint in the contract. POST usually returns 201, not 200.
 
-### Schema-First Design
-
-Define schema before resolvers:
-
-```graphql
-type Task {
-  id: ID!
-  title: String!
-  description: String
-  status: TaskStatus!
-  priority: Priority!
-  assignee: User
-  project: Project!
-  subtasks: [Task!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  IN_REVIEW
-  DONE
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-type Query {
-  task(id: ID!): Task
-  tasks(
-    filter: TaskFilterInput
-    sort: TaskSortInput
-    pagination: PaginationInput
-  ): TaskConnection!
-}
-
-type Mutation {
-  createTask(input: CreateTaskInput!): TaskPayload!
-  updateTask(id: ID!, input: UpdateTaskInput!): TaskPayload!
-  deleteTask(id: ID!): DeletePayload!
-}
-
-input CreateTaskInput {
-  title: String!
-  description: String
-  priority: Priority = MEDIUM
-  projectId: ID!
-  assigneeId: ID
-}
-```
-
-### Connection Pattern for Pagination
-
-```graphql
-type TaskConnection {
-  edges: [TaskEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type TaskEdge {
-  node: Task!
-  cursor: String!
-}
-
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
-```
-
-### Input Validation
-
-Define validation in schema:
-
-```graphql
-input CreateTaskInput {
-  title: String! @constraint(minLength: 3, maxLength: 200)
-  description: String @constraint(maxLength: 5000)
-  priority: Priority = MEDIUM
-}
-```
-
-### Error Handling
-
-Use union types for expected errors:
-
-```graphql
-type TaskPayload {
-  task: Task
-  errors: [UserError!]!
-}
-
-type UserError {
-  field: [String!]
-  message: String!
-  code: ErrorCode!
-}
-
-enum ErrorCode {
-  VALIDATION_ERROR
-  NOT_FOUND
-  PERMISSION_DENIED
-  CONFLICT
-}
-```
-
-## API Versioning Strategies
-
-### URL Path Versioning (Recommended for REST)
-
-```
-/api/v1/tasks
-/api/v2/tasks
-```
-
-Pros: Explicit, easy to route, cacheable
-Cons: URL pollution, harder to deprecate
-
-### Header Versioning
-
-```
-GET /api/tasks
-Accept: application/vnd.myapp.v2+json
-```
-
-Pros: Clean URLs
-Cons: Less visible, harder to test
-
-### GraphQL Versioning
-
-Avoid versioning in GraphQL. Instead:
-- Use @deprecated directive for fields
-- Add new fields alongside old ones
-- Remove deprecated fields after migration period
-
-```graphql
-type Task {
-  title: String!
-  name: String @deprecated(reason: "Use title instead")
-}
-```
+---
 
 ## Validation Rules
 
-### Request Validation
+### Request Validation Template
+
+Document validation in the contract:
 
 ```yaml
-CreateTask:
-  title:
+CreateUser:
+  email:
     type: string
     required: true
-    minLength: 3
-    maxLength: 200
-    pattern: "^[^<>]*$"  # No HTML tags
-
-  description:
+    format: email
+    maxLength: 255
+    
+  name:
+    type: string
+    required: true
+    minLength: 2
+    maxLength: 100
+    pattern: "^[a-zA-Z ]+$"
+    
+  password:
+    type: string
+    required: true
+    minLength: 8
+    pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$"
+    
+  role:
     type: string
     required: false
-    maxLength: 5000
-
-  priority:
-    type: enum
-    values: [low, medium, high, urgent]
-    default: medium
-
-  dueDate:
-    type: datetime
-    format: ISO8601
-    mustBeFuture: true
+    enum: [user, admin]
+    default: user
 ```
 
-### Response Validation
-
-Ensure responses match contracts:
-
-```javascript
-// Example validation middleware
-const validateResponse = (schema) => (req, res, next) => {
-  const originalJson = res.json;
-  res.json = (data) => {
-    const validation = schema.validate(data);
-    if (!validation.valid) {
-      logger.error('Response validation failed', validation.errors);
-    }
-    return originalJson.call(res, data);
-  };
-  next();
-};
-```
+---
 
 ## Security Considerations
 
-### Authentication
+Document in the contract:
 
 ```yaml
 endpoints:
@@ -364,102 +352,180 @@ endpoints:
   /api/v1/public/status:
     GET:
       auth: none
-```
 
-### Rate Limiting
-
-```yaml
 rateLimits:
   default:
     requests: 100
     window: 60s
-
+    
   authenticated:
     requests: 1000
     window: 60s
-
-  endpoints:
-    /api/v1/search:
-      requests: 20
-      window: 60s
+    
+  /api/v1/search:
+    requests: 20
+    window: 60s
 ```
 
-### Input Sanitization
+---
 
-- Validate all inputs against expected types
-- Sanitize strings to prevent XSS
-- Parameterize queries to prevent injection
-- Limit request body size
-- Validate content types
+## Contract Verification Process
+
+### Before Implementation
+
+1. Read `api-contracts.md` completely
+2. Identify the endpoint to implement
+3. Note: method, path, request schema, response schema, status codes
+4. Implement EXACTLY as specified
+
+### After Implementation
+
+1. Run contract tests against the endpoint
+2. Verify response matches documented schema
+3. Verify status codes match documentation
+4. Update contract status: ⏳ → 🔄 → ✅
+
+### Integration Verification (Phase 6)
+
+```bash
+# Find all API calls in codebase
+grep -r "fetch\|axios\|http" src/
+
+# Verify each call matches contract
+# Look for:
+# - Correct HTTP method
+# - Correct path
+# - Correct request body structure
+# - Correct response handling
+```
+
+---
 
 ## Phase 3 Integration Checklist
 
 When defining APIs during framework planning:
 
-1. **List all resources** from Phase 2 module breakdown
-2. **Define CRUD operations** for each resource
-3. **Map relationships** between resources
-4. **Document authentication requirements** per endpoint
-5. **Specify validation rules** for all inputs
-6. **Design error responses** with consistent codes
-7. **Plan pagination** for list endpoints
-8. **Version strategy** decided and documented
+- [ ] List all resources from Phase 2 module breakdown
+- [ ] Define CRUD operations for each resource
+- [ ] Map relationships between resources
+- [ ] Document authentication requirements per endpoint
+- [ ] Specify validation rules for all inputs
+- [ ] Design error responses with consistent codes
+- [ ] Plan pagination for list endpoints
+- [ ] Version strategy decided and documented
+- [ ] **Create api-contracts.md as source of truth**
+- [ ] **Mark each endpoint status: ⏳ Pending**
 
-## API Contract Documentation
+---
 
-Create contracts that enable agent assignment:
+## Agent Assignment Integration (Phase 4)
+
+The API contract enables clean agent boundaries:
 
 ```markdown
-## Task API Contract
+## Agent Assignment from Contract
 
-### Resource: Task
+### Backend Agent
+- Implements all endpoints in api-contracts.md
+- Must match contract exactly
+- Updates status: ⏳ → 🔄 → ✅
 
-**Endpoints:**
-| Method | Path | Description | Auth | Scope |
-|--------|------|-------------|------|-------|
-| GET | /tasks | List tasks | Yes | tasks:read |
-| POST | /tasks | Create task | Yes | tasks:write |
-| GET | /tasks/{id} | Get task | Yes | tasks:read |
-| PUT | /tasks/{id} | Update task | Yes | tasks:write |
-| DELETE | /tasks/{id} | Delete task | Yes | tasks:delete |
+### Frontend Agent
+- Reads api-contracts.md for correct paths
+- Must not guess endpoints
+- Reports contract mismatches immediately
 
-**Request Schema (POST /tasks):**
-[JSON Schema here]
-
-**Response Schema (200 OK):**
-[JSON Schema here]
-
-**Error Codes:**
-[Error code definitions]
-
-**Dependencies:**
-- Requires User API for assignee validation
-- Requires Project API for project validation
-
-**Agent Assignment:**
-- Backend Agent: Implement endpoints
-- Frontend Agent: Consume API per contract
-- Test Agent: Validate contract compliance
+### QA Agent
+- Generates tests from contract
+- Validates response schemas
+- Tests error scenarios
 ```
 
-## API Design Decision Tree
+---
 
-```mermaid
-flowchart TD
-    Start[API Design Decision] --> Q1{Multiple clients with different needs?}
-    Q1 -->|Yes| GraphQL[Consider GraphQL]
-    Q1 -->|No| Q2{Complex nested data?}
-    Q2 -->|Yes| GraphQL
-    Q2 -->|No| REST[Use REST]
+## Common Contract Mistakes to Avoid
 
-    REST --> Q3{Need standardization?}
-    Q3 -->|Yes| JSONAPI[Use JSON:API]
-    Q3 -->|No| Custom[Custom REST]
+| Mistake | Problem | Fix |
+|---------|---------|-----|
+| `POST /users` returns 200 | Inconsistent with REST | Use 201 for creation |
+| Missing pagination | List endpoints return all data | Add page/limit params |
+| No error details | Client can't show specific errors | Add field-level errors |
+| Guessing endpoints | Wrong paths in code | Always read contract first |
+| Implicit schemas | Frontend assumes structure | Document every field |
+| Missing auth requirements | Security gaps | Document auth per endpoint |
 
-    GraphQL --> Q4{Real-time updates?}
-    Q4 -->|Yes| Subscriptions[Add Subscriptions]
-    Q4 -->|No| QM[Queries + Mutations]
+---
+
+## API Contract Update Protocol
+
+When the contract needs to change:
+
+1. **Propose** the change with reasoning
+2. **Check** for breaking changes (existing consumers)
+3. **Update** the contract document first
+4. **Notify** all agents using `shared-context.md`
+5. **Update** implementation to match new contract
+6. **Verify** all callers handle the change
+
+---
+
+## Quick Reference: Reading the Contract
+
+When implementing code that calls an API:
+
+```markdown
+1. Open `.framework-blueprints/03-api-planning/api-contracts.md`
+
+2. Find the endpoint in the Index table
+
+3. Read the full endpoint details:
+   - Method (GET/POST/PUT/DELETE)
+   - Exact path (watch for plurals: /users not /user)
+   - Query parameters (for GET)
+   - Request body schema (for POST/PUT)
+   - Response schema (what you'll receive)
+   - Status codes (especially success code)
+
+4. Implement using EXACTLY these details
+
+5. Do not assume or guess any part
 ```
+
+---
+
+## GraphQL Contract Alternative
+
+For GraphQL APIs, document in `api-contracts.md`:
+
+```graphql
+# Types
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  createdAt: DateTime!
+}
+
+# Queries
+type Query {
+  user(id: ID!): User
+  users(page: Int, limit: Int): UserConnection!
+}
+
+# Mutations
+type Mutation {
+  createUser(input: CreateUserInput!): UserPayload!
+}
+
+# Inputs
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+}
+```
+
+---
 
 ## Research Before Finalizing
 
@@ -467,6 +533,7 @@ Before finalizing API design:
 
 1. Search for "[Domain] API design best practices"
 2. Review similar successful APIs in the space
-3. Check framework-specific conventions (Rails, Express, FastAPI)
-4. Validate security requirements against OWASP API Top 10
+3. Check framework-specific conventions (Express, FastAPI)
+4. Validate security against OWASP API Top 10
 5. Document decisions in ADRs
+6. **Write everything to api-contracts.md**
