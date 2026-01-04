@@ -1,84 +1,56 @@
 {
-  "hooks": [
-    {
-      "event": "SessionStart",
-      "description": "Check for existing framework blueprints and git state on session start",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "SESSION INITIALIZATION:\n\n1. GIT STATUS CHECK:\n   - Run `git status` to check if this is a git repository\n   - If not a git repo, suggest: `git init` for version control\n   - If git repo, check for uncommitted changes in `.framework-blueprints/`\n\n2. STATE RECOVERY:\n   - Check if `.framework-blueprints/00-project-state.json` exists\n   - If exists, read it and show: project name, current phase, last update, rollbacks\n   - Check for `state-summary-phase-*.md` files and read them to restore critical details\n   - Check git tags: `git tag -l 'checkpoint-*' 'phase-*' --sort=-creatordate | head -5`\n\n3. CHECKPOINT AVAILABILITY:\n   - List available rollback points if any exist\n   - Inform user they can use `/rollback list` to see all checkpoints\n\n4. SESSION PROMPT:\n   - If state exists: 'Previous session found. Resume or start fresh?'\n   - If no state: Proceed normally\n\n5. Set working context by reading the current outline if it exists."
-        }
-      ]
-    },
-    {
-      "event": "PreTask",
-      "description": "Sync with Master Plan - Prevents context drift by forcing re-read of source of truth",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "CONTEXT SYNC REQUIRED before proceeding:\n\n1. If `.framework-blueprints/01-discovery/outline-v1.md` exists, READ it to understand the approved project structure.\n\n2. If `.framework-blueprints/03-api-planning/api-contracts.md` exists, READ it to know the correct endpoints, methods, and schemas.\n\n3. If `.framework-blueprints/00-project-state.json` exists, READ it to know the current phase and completed work.\n\n4. CONFIRM this task does not:\n   - Drift from the approved outline\n   - Break existing API contracts\n   - Duplicate already-completed work\n   - Skip required dependencies\n\n5. If any conflict is detected, STOP and inform the user before proceeding.\n\nOnly proceed with the task after this verification is complete."
-        }
-      ]
-    },
-    {
-      "event": "PostTask",
-      "description": "State Persistence, Git Commit & Link Validation - Ensures all changes are recorded and verified",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "POST-TASK VERIFICATION REQUIRED:\n\n1. FILE VERIFICATION: For any files created or modified in this task:\n   - Use `ls` or `Glob` to verify all new file paths actually exist\n   - Use `Grep` to check for any broken imports or references\n\n2. API CONTRACT COMPLIANCE: If any endpoints were implemented:\n   - Read `.framework-blueprints/03-api-planning/api-contracts.md`\n   - Verify implemented endpoints match the contract exactly (method, path, request/response schema)\n   - If mismatch found, flag it immediately\n\n3. STATE UPDATE: Update `.framework-blueprints/00-project-state.json` with:\n   - Any new decisions made (add to decisions array)\n   - Any tasks completed (update progress)\n   - Current phase status\n   - Timestamp update\n\n4. GIT BACKUP (if major task):\n   - If this was a significant change, stage blueprint files:\n     `git add .framework-blueprints/`\n   - Suggest commit with descriptive message\n   - For phase milestones, suggest creating a tag\n\n5. SMALL CIRCLE STATUS: Provide a brief summary to user:\n   ```\n   Task Complete: [task name]\n   Files Modified: [list]\n   Links Verified: [yes/no]\n   Phase Progress: [X]%\n   Git Status: [staged/committed]\n   Next Task: [name] (awaiting verification)\n   ```\n\n6. If this completes a task, explicitly state: 'Task [ID] is finished and committed to blueprints. Details archived.'"
-        }
-      ]
-    },
-    {
-      "event": "PreWrite",
-      "description": "Just-In-Time Reading before any file write operation",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "BEFORE WRITING: You are about to write/modify a file. First:\n\n1. If writing code that calls an API endpoint:\n   - READ `.framework-blueprints/03-api-planning/api-contracts.md` NOW\n   - Use ONLY the endpoints defined there (do not guess or assume)\n\n2. If creating a new module/component:\n   - READ `.framework-blueprints/01-discovery/outline-v1.md` NOW\n   - Verify this component is part of the approved architecture\n\n3. If updating state:\n   - READ the current `.framework-blueprints/00-project-state.json` NOW\n   - Use Read-Modify-Write pattern (don't overwrite with summary)\n\nProceed only after confirming alignment with source of truth."
-        }
-      ]
-    },
-    {
-      "event": "PhaseTransition",
-      "description": "Checkpoint creation with Git tagging when moving between phases",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "PHASE TRANSITION CHECKPOINT:\n\nBefore moving to the next phase:\n\n1. DELIVERABLE VERIFICATION:\n   - Use `Glob` to list files in the phase directory\n   - Confirm each required file is present and non-empty\n   - Run `/validate all` to check blueprint integrity\n\n2. STATE SNAPSHOT:\n   - Generate `state-summary-phase-[N].md` with critical details\n   - Include: variable names, port numbers, non-standard paths, API quirks\n   - This survives chat context compaction\n\n3. GIT CHECKPOINT:\n   - Stage all blueprint changes: `git add .framework-blueprints/`\n   - Commit with message: `git commit -m 'Checkpoint: Phase [N] complete - [description]'`\n   - Create phase tag: `git tag phase-[N]-complete -m 'Phase [N] completed'`\n   - If at 50%: `git tag checkpoint-$(date +%s) -m 'Phase [N] 50% milestone'`\n   - Store backup: `cp 00-project-state.json backups/state-$(date +%Y%m%dT%H%M%S).json`\n\n4. STATE FILE UPDATE:\n   - Mark current phase as 'completed'\n   - Mark next phase as 'in_progress'\n   - Update timestamps and checkpoint array\n\n5. QUALITY CHECK:\n   - `grep -r 'TODO' .framework-blueprints/` to find unfinished items\n   - `grep -r 'FIXME' .framework-blueprints/` to find issues\n   - If issues found, resolve before proceeding\n\n6. USER APPROVAL:\n   - Display phase summary and metrics\n   - Get explicit user approval before proceeding to next phase\n   - Inform about rollback: 'You can return here with /rollback phase-[N]'"
-        }
-      ]
-    },
-    {
-      "event": "ErrorRecovery",
-      "description": "Re-sync context and offer git recovery after any error occurs",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "ERROR RECOVERY - Context Re-sync:\n\nAn error occurred. Before retrying:\n\n1. STATE RECOVERY:\n   - Re-read `.framework-blueprints/00-project-state.json` to understand current state\n   - Re-read the last `state-summary-phase-*.md` file for critical details\n\n2. ERROR DIAGNOSIS:\n   - Check if the error was caused by:\n     - Wrong endpoint (compare with api-contracts.md)\n     - Wrong file path (use Glob to find correct path)\n     - Missing dependency (check module-hierarchy.md)\n   - If the error relates to API calls, re-read the full api-contracts.md\n\n3. GIT RECOVERY OPTIONS:\n   - Check for recent changes: `git diff .framework-blueprints/`\n   - If files corrupted, suggest: `git checkout -- .framework-blueprints/[file]`\n   - List available checkpoints: `git tag -l 'checkpoint-*' --sort=-creatordate | head -3`\n   - Suggest rollback if needed: '/rollback list' to see options\n\n4. INFORM USER:\n   - Explain the error and recovery steps taken\n   - Offer options: retry, rollback, or manual intervention"
-        }
-      ]
-    },
-    {
-      "event": "HandoffComplete",
-      "description": "Git commit and tagging when completing agent handoffs",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "HANDOFF CHECKPOINT:\n\nAfter completing an agent handoff:\n\n1. VERIFY HANDOFF:\n   - Confirm all handoff deliverables are present\n   - Verify the handoff document is complete\n   - Check that receiving agent has clear instructions\n\n2. GIT RECORD:\n   - Stage handoff files: `git add .framework-blueprints/05-execution/handoffs/`\n   - Commit: `git commit -m 'Handoff: [FROM] -> [TO] - [brief description]'`\n   - Tag: `git tag handoff-HO-[ID] -m '[description]'`\n\n3. STATE UPDATE:\n   - Add handoff to the handoffs array in state file\n   - Update the receiving agent's task status\n\n4. NOTIFY:\n   - Inform user: 'Handoff [ID] committed. Receiving agent [NAME] can now proceed.'\n   - Provide rollback info: 'Rollback available: /rollback handoff-HO-[ID]'"
-        }
-      ]
-    },
-    {
-      "event": "BlueprintModified",
-      "description": "Track and optionally auto-commit blueprint file changes",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "BLUEPRINT CHANGE DETECTED:\n\nA blueprint file was modified.\n\n1. TRACK CHANGE:\n   - Note which file was modified\n   - Classify change type: content update, new file, deletion\n\n2. VALIDATION (for critical files):\n   - If `00-project-state.json` modified: Validate against schema\n   - If `api-contracts.md` modified: Check for breaking changes\n   - If outline modified: Verify it doesn't invalidate existing work\n\n3. GIT STAGING SUGGESTION:\n   - If 3+ files modified this session, suggest: 'Consider committing your progress'\n   - Provide command: `git add .framework-blueprints/ && git commit -m '[message]'`\n\n4. AUTO-BACKUP (for state file):\n   - If state file changed, create timestamped backup\n   - Keep last 5 backups, delete older ones"
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if `.framework-blueprints/00-project-state.json` exists. If it exists, read it and inform the user that a previous framework development session was found, showing the project name, current phase, and last update date. Ask if they want to resume or start fresh. If no state file exists, proceed normally."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "If `.framework-blueprints/00-project-state.json` exists, briefly check that this request aligns with the current phase and doesn't conflict with existing decisions. If major conflict detected, warn the user."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before writing code that may call API endpoints, verify the endpoint exists in `.framework-blueprints/03-api-planning/api-contracts.md` if that file exists. Use only endpoints defined there."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "If a file in `.framework-blueprints/` was modified, consider updating `00-project-state.json` with the change and timestamp."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "If working on framework development and significant progress was made, remind user they can run `/checkpoint` to save state, or suggest committing blueprint changes with git."
+          }
+        ]
+      }
+    ]
+  }
 }
