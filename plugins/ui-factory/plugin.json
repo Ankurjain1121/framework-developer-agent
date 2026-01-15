@@ -1,0 +1,15 @@
+{
+  "name": "ui-factory",
+  "version": "1.0.0",
+  "description": "Complete UI pipeline: /design (PRD → UX 9-pass) → /frontend-design (create) → /ui-improve (enhance) → /ui-audit (analyze). Uses shadcn/ui + Tailwind. Anti-AI-slop. Parallel execution via /orchestrate.",
+  "author": "paras",
+  "keywords": ["ui", "design", "frontend", "shadcn", "react", "ux", "accessibility"],
+  "skills": [
+    "skills/design",
+    "skills/frontend-design",
+    "skills/ui-improve",
+    "skills/ui-audit",
+    "skills/orchestrate"
+  ],
+  "agents": []
+}
