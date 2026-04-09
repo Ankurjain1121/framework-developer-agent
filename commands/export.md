@@ -113,7 +113,7 @@ Generate a standalone HTML file with embedded styles.
   <title>[Project Name] - Framework Blueprint</title>
   <style>
     :root {
-      --primary: #4F46E5;
+      --primary: #2563EB;
       --bg: #ffffff;
       --text: #1f2937;
       --border: #e5e7eb;

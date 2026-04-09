@@ -2,100 +2,26 @@
 description: Use this skill to track and persist project state across sessions. Provides state file schema, checkpointing protocols, and context recovery procedures for the Framework Developer Orchestrator.
 ---
 
-# Project State Management Skill
+# Project State Management
 
-This skill teaches the Framework Developer Orchestrator how to track and persist project state across sessions, ensuring continuity and enabling seamless resumption of work.
+**State File:** `.framework-blueprints/00-project-state.json`
+**Schema:** `references/state-schema.json` (single source of truth)
 
-## Overview
-
-The state management system maintains a single source of truth for:
-- Current workflow phase (1-6)
-- All decisions made (with sources)
-- Module definitions and dependencies
-- Agent assignments and status
-- Handoff tracking between agents
-- Risk registry
-- **Checkpoint summaries (critical for context recovery)**
-
-**State File Location:** `.framework-blueprints/00-project-state.json`
+**Core rules:** Immediate writes (never defer). Just-in-time reads (always read before writing). Read-Modify-Write (never overwrite with summaries). Checkpoint at 50% and 100% of each phase.
 
 ---
 
-## CRITICAL: Context Window Mitigation
+## 1. Initialization
 
-Claude Code has a limited context window that gets compacted during long sessions. This causes:
-- Loss of specific details (variable names, ports, paths)
-- "Guessing" instead of reading from source
-- Drift from approved architecture
-
-### The Solution: File-Based Memory
-
-**Chat = Volatile Memory** (gets compacted, loses details)
-**Files = Persistent Memory** (always accurate if maintained)
-
-This skill enforces:
-1. **Immediate writes** - Never defer state updates
-2. **Just-in-time reads** - Always read before writing
-3. **Checkpoint summaries** - Capture details before they're lost
-4. **Read-Modify-Write** - Never overwrite with summaries
-
----
-
-## 1. State File Initialization
-
-### When to Initialize
-
-Initialize a new state file when:
-1. User starts a new project with `/framework-dev`
-2. No existing state file is found in the project directory
-3. User explicitly requests a fresh start
+Initialize when starting a new project or no state file found.
 
 ### Initial State Template
 
-```json
-{
-  "projectName": "",
-  "version": "1.0.0",
-  "createdAt": "",
-  "updatedAt": "",
-  "currentPhase": 1,
-  "phases": {
-    "1": { "status": "in_progress", "startedAt": "", "progress": 0 },
-    "2": { "status": "pending", "progress": 0 },
-    "3": { "status": "pending", "progress": 0 },
-    "4": { "status": "pending", "progress": 0 },
-    "5": { "status": "pending", "progress": 0 },
-    "6": { "status": "pending", "progress": 0 }
-  },
-  "decisions": [],
-  "modules": [],
-  "agents": [],
-  "handoffs": [],
-  "risks": [],
-  "checkpoints": [],
-  "criticalDetails": {
-    "ports": {},
-    "envVars": [],
-    "nonStandardPaths": {},
-    "apiQuirks": []
-  }
-}
-```
+Initialize per `references/state-schema.json` (single source of truth for all field definitions and enum values).
 
 ---
 
-## 2. MANDATORY: Checkpointing Protocol
-
-### Why Checkpoints Matter
-
-During long sessions, Claude's context window compacts. Details like:
-- `JWT_SECRET_KEY` environment variable name
-- Port 5432 for PostgreSQL
-- Non-standard path `src/core/auth/` instead of `src/auth/`
-
-...get lost because they seem "minor" but are critical for correct code.
-
-### Checkpoint Triggers
+## 2. Checkpointing Protocol
 
 Create checkpoints at:
 
@@ -107,63 +33,9 @@ Create checkpoints at:
 | After error recovery | Re-capture state from files |
 | User runs `/checkpoint` | Full context refresh |
 
-### State Summary File Format
+### State Summary Format
 
-Create `state-summary-phase-N.md` with this structure:
-
-```markdown
-# Phase [N] State Summary
-
-**Generated:** [ISO timestamp]
-**Phase:** [Name]
-**Progress:** [X]%
-
-## Critical Details (PRESERVE THESE)
-
-### Environment Variables
-- `DATABASE_URL`: Connection string for PostgreSQL
-- `JWT_SECRET_KEY`: Used in src/core/auth/jwt.ts
-- `REDIS_URL`: Cache connection (optional)
-
-### Ports & Connections
-- PostgreSQL: 5432
-- Redis: 6379
-- API Server: 3000
-- Frontend Dev: 5173
-
-### Non-Standard Paths
-| Expected | Actual | Reason |
-|----------|--------|--------|
-| src/auth/ | src/core/auth/ | Grouped with core utilities |
-| src/db/ | src/infrastructure/database/ | Hexagonal architecture |
-
-### API Quirks
-- POST /api/users returns 201, not 200
-- All dates are ISO 8601 UTC, not local
-- Pagination uses cursor, not offset
-- Auth header format: `Bearer <token>` (space required)
-
-### Variable Names (Exact)
-- User ID field: `userId` (not `user_id` or `id`)
-- Timestamp fields: `createdAt`, `updatedAt` (camelCase)
-- JWT payload: `{ sub: userId, iat: timestamp, exp: timestamp }`
-
-## Decisions Made This Phase
-1. [D001] Chose PostgreSQL over MongoDB - [source URL]
-2. [D002] Using Hexagonal Architecture - [source URL]
-
-## Tasks Completed
-- [x] T001: Database schema design
-- [x] T002: Auth module structure
-- [ ] T003: JWT implementation (in progress)
-
-## Open Questions
-- Should refresh tokens be stored in Redis or DB?
-- Rate limiting strategy TBD
-
-## Blockers
-- None currently
-```
+Create `state-summary-phase-N.md` with sections: Critical Details (env vars, ports, non-standard paths, API quirks, exact variable names), Decisions Made, Tasks Completed, Open Questions, Blockers. Focus on non-discoverable details that would be lost on context compaction.
 
 ### Atomic Updates
 
@@ -331,8 +203,9 @@ function validateState(state: unknown): ValidationResult {
   // Required fields
   const requiredFields = [
     'projectName', 'version', 'createdAt', 'updatedAt',
-    'currentPhase', 'phases', 'decisions', 'modules', 
-    'agents', 'handoffs', 'risks'
+    'currentPhase', 'scopeMode', 'phases', 'decisions',
+    'modules', 'agents', 'handoffs', 'risks', 'checkpoints',
+    'premises', 'reviewFindings', 'deferredItems', 'criticalDetails'
   ];
 
   for (const field of requiredFields) {

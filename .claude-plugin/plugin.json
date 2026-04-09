@@ -1,7 +1,7 @@
 {
   "name": "framework-dev",
-  "version": "3.0.0",
-  "description": "Project architecture orchestrator with context-safe state management, Git-integrated checkpoints, and comprehensive blueprint generation. Features 6-phase workflow, research-backed recommendations, multi-agent coordination, validation system, and export capabilities.",
+  "version": "4.0.0",
+  "description": "Project architecture orchestrator with premise challenge, 4 scope modes, implementation alternatives, dream state mapping, confidence-scored findings, outside voice review, autoplan auto-decisions, and context-safe blueprint generation.",
   "author": {
     "name": "Ankur Jain",
     "email": "ankurjain1121@gmail.com"

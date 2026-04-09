@@ -10,12 +10,18 @@
     "createdAt",
     "updatedAt",
     "currentPhase",
+    "scopeMode",
     "phases",
     "decisions",
     "modules",
     "agents",
     "handoffs",
-    "risks"
+    "risks",
+    "checkpoints",
+    "premises",
+    "reviewFindings",
+    "deferredItems",
+    "criticalDetails"
   ],
   "properties": {
     "projectName": {
@@ -41,10 +47,16 @@
       "format": "date-time"
     },
     "currentPhase": {
-      "type": "integer",
-      "description": "The current workflow phase (1-6)",
+      "type": "number",
+      "description": "The current workflow phase (1-6, 3.5 for Outside Voice)",
       "minimum": 1,
       "maximum": 6
+    },
+    "scopeMode": {
+      "type": "string",
+      "description": "Planning posture selected in Phase 1",
+      "enum": ["expansion", "selective", "hold", "reduction"],
+      "default": "hold"
     },
     "phases": {
       "type": "object",
@@ -94,6 +106,51 @@
       "type": "array",
       "description": "State snapshots taken at 50% and 100% of each phase",
       "items": { "$ref": "#/definitions/checkpoint" },
+      "default": []
+    },
+    "premises": {
+      "type": "array",
+      "description": "Validated premises from Phase 1 premise challenge",
+      "items": {
+        "type": "object",
+        "required": ["premise", "status"],
+        "properties": {
+          "premise": { "type": "string" },
+          "status": { "type": "string", "enum": ["valid", "challenged", "needs_verification"] },
+          "evidence": { "type": "string" },
+          "riskIfWrong": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "reviewFindings": {
+      "type": "array",
+      "description": "Findings from reviews across all phases with confidence scores",
+      "items": {
+        "type": "object",
+        "required": ["phase", "finding", "severity", "confidence"],
+        "properties": {
+          "phase": { "type": "number" },
+          "finding": { "type": "string" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "confidence": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "resolution": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "deferredItems": {
+      "type": "array",
+      "description": "Work explicitly deferred with rationale (NOT in scope)",
+      "items": {
+        "type": "object",
+        "required": ["item", "rationale"],
+        "properties": {
+          "item": { "type": "string" },
+          "rationale": { "type": "string" },
+          "deferredAt": { "type": "string", "format": "date-time" }
+        }
+      },
       "default": []
     },
     "criticalDetails": {
@@ -166,6 +223,14 @@
           "type": "string",
           "format": "date-time",
           "description": "When the 50% checkpoint was created"
+        },
+        "outsideVoice": {
+          "type": "object",
+          "description": "Phase 3.5 Outside Voice status (only used on phase 3)",
+          "properties": {
+            "status": { "type": "string", "enum": ["pending", "completed", "skipped"] },
+            "completedAt": { "type": "string", "format": "date-time" }
+          }
         }
       }
     },
@@ -262,7 +327,7 @@
         "artifact": { "type": "string" },
         "status": {
           "type": "string",
-          "enum": ["pending", "in_review", "completed", "rejected"]
+          "enum": ["pending", "in_progress", "in_review", "completed", "blocked", "rejected"]
         },
         "initiatedAt": {
           "type": "string",

@@ -142,10 +142,12 @@ When done, update this file:
 
 | State | Meaning | Next Action |
 |-------|---------|-------------|
-| `PENDING` | Created, not started | Target agent picks up |
-| `IN_PROGRESS` | Target agent working | Monitor progress |
-| `COMPLETED` | All tasks done | Orchestrator reviews |
-| `BLOCKED` | Cannot proceed | Resolve blocker |
+| `pending` | Created, not started | Target agent picks up |
+| `in_progress` | Target agent working | Monitor progress |
+| `in_review` | Work done, under review | Orchestrator verifies quality |
+| `completed` | All tasks done and verified | Archive handoff |
+| `blocked` | Cannot proceed | Resolve blocker |
+| `rejected` | Failed quality gate | Source agent reworks |
 
 ---
 

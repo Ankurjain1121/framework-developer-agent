@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Check if `.framework-blueprints/00-project-state.json` exists. If it exists, read it and inform the user that a previous framework development session was found, showing the project name, current phase, and last update date. Ask if they want to resume or start fresh. If no state file exists, proceed normally."
+            "prompt": "Check if `.framework-blueprints/00-project-state.json` exists. If it does NOT exist, skip all framework-dev logic. If it exists, read it and inform the user: project name, current phase, scope mode, last update. Read any `state-summary-phase-*.md` files. Validate required fields are present and phase statuses are valid. Ask: resume, review, or start fresh."
           }
         ]
       }
@@ -15,18 +15,27 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If `.framework-blueprints/00-project-state.json` exists, briefly check that this request aligns with the current phase and doesn't conflict with existing decisions. If major conflict detected, warn the user."
+            "prompt": "Only if `.framework-blueprints/` directory exists OR the current command is /framework-dev or /autoplan: check that this request aligns with the current phase and scope mode. If scope mode drift detected (silently expanding when mode is 'hold', or reducing when mode is 'expansion'), warn the user. Otherwise skip entirely."
           }
         ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "BASH SAFETY CHECK: Only allow git commands, ls/find/wc, test runners (npm test, pytest, cargo test), linters (eslint, prettier), and pandoc. REJECT commands that: install packages (npm install, pip install, apt), modify system files, make network requests (curl, wget, fetch), use eval/source/sh -c, or pipe untrusted content to shell. If the command violates these rules, suggest a safe alternative."
+          }
+        ]
+      },
+      {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Before writing code that may call API endpoints, verify the endpoint exists in `.framework-blueprints/03-api-planning/api-contracts.md` if that file exists. Use only endpoints defined there."
+            "prompt": "Only if the file being written is inside `.framework-blueprints/` or references API endpoints from the project: verify the endpoint exists in `.framework-blueprints/03-api-planning/api-contracts.md` if that file exists. Re-read current state file before writing to avoid overwriting recent changes. If the file is NOT in .framework-blueprints/, skip this check."
           }
         ]
       }
@@ -37,7 +46,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If a file in `.framework-blueprints/` was modified, consider updating `00-project-state.json` with the change and timestamp."
+            "prompt": "Only if a file inside `.framework-blueprints/` was modified: update `00-project-state.json` with the change and timestamp. Verify all internal references to the modified file are still valid. If a decision was made, add to decisions[] with source URL and confidence score. If the modified file is NOT in .framework-blueprints/, skip entirely."
           }
         ]
       }
@@ -47,7 +56,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If working on framework development and significant progress was made, remind user they can run `/checkpoint` to save state, or suggest committing blueprint changes with git."
+            "prompt": "Only if `.framework-blueprints/` exists and significant progress was made: remind user to run /checkpoint or commit blueprint changes with git."
           }
         ]
       }

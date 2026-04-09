@@ -232,5 +232,5 @@ Run `/validate` when:
 - When something "feels off"
 
 Validation is also triggered automatically by:
-- PostTask hook (partial)
-- PhaseTransition hook (full)
+- PostToolUse hook (partial)
+- Stop hook (on session end)
